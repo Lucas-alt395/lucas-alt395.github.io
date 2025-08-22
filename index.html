@@ -3,85 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Valentijnsdag</title>
-    <style>
-        body {
-            background-color: #ffccd5;
-            text-align: center;
-            font-family: Arial, sans-serif;
-            color: #b30000;
-            margin: 0;
-            overflow: hidden;
-        }
-        h1 {
-            margin-top: 50px;
-            font-size: 3em;
-        }
-        p {
-            font-size: 1.5em;
-            color: #800000;
-        }
-        button {
-            padding: 15px 30px;
-            font-size: 1.2em;
-            background-color: #ff4d6d;
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 20px;
-            margin-top: 20px;
-        }
-        button:hover {
-            background-color: #c9184a;
-        }
-        .heart {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            background-color: red;
-            transform: rotate(-45deg);
-            animation: float 4s infinite;
-        }
-        .heart:before,
-        .heart:after {
-            content: "";
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            background-color: red;
-            border-radius: 50%;
-        }
-        .heart:before {
-            top: -10px;
-            left: 0;
-        }
-        .heart:after {
-            top: 0;
-            left: 10px;
-        }
-        @keyframes float {
-            0% { transform: translateY(0) rotate(-45deg); opacity: 1; }
-            100% { transform: translateY(-100vh) rotate(-45deg); opacity: 0; }
-        }
-    </style>
+    <title>The Spycee Website</title>
 </head>
 <body>
-    <h1>Gelukkige Valentijnsdag! ❤️</h1>
-    <p>Hallo Jasmijn, je bent het mooiste meisje ooit! 💖</p>
-    <button onclick="showMessage()">Klik voor een Verrassing</button>
-    <script>
-        function showMessage() {
-            alert("Je bent geliefd! 💕 Gelukkige Valentijnsdag!");
-        }
-        function createHeart() {
-            const heart = document.createElement("div");
-            heart.classList.add("heart");
-            document.body.appendChild(heart);
-            heart.style.left = Math.random() * 100 + "vw";
-            heart.style.animationDuration = (Math.random() * 2 + 3) + "s";
-            setTimeout(() => { heart.remove(); }, 4000);
-        }
-        setInterval(createHeart, 300);
-    </script>
+   <h1>In construction 🚧 👷‍♂️</h1>
 </body>
 </html>

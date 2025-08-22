@@ -84,30 +84,8 @@
   <div class="navbar">
     <h1>TheMusicalGamer Website</h1>
     <div class="dropdown">
-      <button onclick="toggleDropdown()" class="dropbtn">Projects</button>
-      <div id="dropdownMenu" class="dropdown-content">
-        <a href="/spycee/spycee.html">Spycee</a>
-      </div>
+      <a href="https://lucas-alt395.github.io/spycee/spycee.html" class="dropbtn">Projects</a>
     </div>
   </div>
-
-  <script>
-    function toggleDropdown() {
-      document.getElementById("dropdownMenu").classList.toggle("show");
-    }
-
-    // Close menu if user clicks outside
-    window.onclick = function(event) {
-      if (!event.target.matches('.dropbtn')) {
-        let dropdowns = document.getElementsByClassName("dropdown-content");
-        for (let i = 0; i < dropdowns.length; i++) {
-          let openDropdown = dropdowns[i];
-          if (openDropdown.classList.contains('show')) {
-            openDropdown.classList.remove('show');
-          }
-        }
-      }
-    }
-  </script>
 </body>
 </html>

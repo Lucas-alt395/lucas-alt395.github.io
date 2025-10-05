@@ -1,0 +1,4 @@
+<version>"2"</>
+<channelname>"LTV"</>
+<schedules_folder>"SD"</>
+<films_folder>"FILMS"</>

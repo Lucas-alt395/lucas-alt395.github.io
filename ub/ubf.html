@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>URUBF Web — Encoder / Decoder (Internet Edition)</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%230b5fff'/%3E%3Ctext x='50' y='58' font-size='48' text-anchor='middle' fill='white'%3EU%3C/text%3E%3C/svg%3E">
+<style>
+  :root{--bg:#0f1724;--card:#0b1220;--glass:rgba(255,255,255,0.03);--accent:#0b5fff;--muted:#94a3b8}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial;color:#e6eef8;background:linear-gradient(180deg,#071029 0%,#071226 60%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px}
+  .app{width:100%;max-width:980px;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));box-shadow:0 10px 40px rgba(2,6,23,0.6);overflow:hidden}
+  header{display:flex;align-items:center;gap:16px;padding:18px 22px;border-bottom:1px solid rgba(255,255,255,0.03)}
+  .logo{width:48px;height:48px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700}
+  header h1{font-size:18px;margin:0}
+  .container{display:grid;grid-template-columns:1fr 420px;gap:18px;padding:18px}
+  .pane{background:var(--card);border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,0.02)}
+  label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+  textarea,input,select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:inherit}
+  .row{display:flex;gap:10px}
+  button{background:var(--accent);color:white;border:0;padding:10px 12px;border-radius:8px;cursor:pointer}
+  .muted{color:var(--muted);font-size:13px}
+  .drop{min-height:120px;border:2px dashed rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center;border-radius:10px;color:var(--muted);cursor:pointer}
+  pre{background:linear-gradient(180deg,#061026,#071226);padding:12px;border-radius:8px;color:#dbeafe;font-size:13px;overflow:auto}
+  footer{padding:12px 18px;border-top:1px solid rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:space-between}
+  .small{font-size:13px;color:var(--muted)}
+  .badge{background:rgba(255,255,255,0.03);padding:6px 9px;border-radius:999px;font-weight:600}
+  @media (max-width:920px){.container{grid-template-columns:1fr} .pane.right{order:2}}
+</style>
+</head>
+<body>
+  <div class="app" id="app">
+    <header>
+      <div class="logo">TMG</div>
+      <div>
+        <h1>Ultra-Binary File (UBF) Encoder / Decoder</h1>
+        <div class="muted">File format: .urubf · Shareable links</div>
+      </div>
+      <div style="margin-left:auto" class="badge">v3</div>
+    </header>
+
+    <div class="container">
+      <div class="pane left">
+        <label>Encode style</label>
+        <select id="encodeStyle">
+          <option value="bitstr">Bitstring (00110001-/-...)</option>
+        </select>
+
+        <div style="display:flex;gap:10px;margin-top:10px">
+          <div style="flex:1">
+            <label>Version</label>
+            <input id="version" value="1">
+          </div>
+          <div style="width:110px">
+            <label>Marker</label>
+            <input id="marker" value="L">
+          </div>
+        </div>
+
+        <label style="margin-top:10px">Message</label>
+        <textarea id="msg" rows="6">Hello from URUBF Web!</textarea>
+
+        <div style="display:flex;gap:10px;margin-top:12px;align-items:center">
+          <button id="encodeBtn">Encode & Download</button>
+          <button id="encodePreview">Preview bytes</button>
+          <div class="muted">Or drag a file to the decoder on the right</div>
+        </div>
+
+        <hr style="margin:14px 0;border:none;border-top:1px solid rgba(255,255,255,0.02)">
+
+        <label>Share / Permalink</label>
+        <div style="display:flex;gap:8px">
+          <button id="makeLink">Create share link</button>
+          <input id="permalink" placeholder="Share link appears here" style="flex:1">
+        </div>
+        <div class="muted" style="margin-top:8px">Create a data-URL-style link that anyone with this app can open to preload the file.</div>
+
+      </div>
+
+      <div class="pane right">
+        <label>Decode — drag & drop or pick a .urubf file</label>
+        <div id="dropArea" class="drop">Drop file here or click to choose</div>
+        <input id="fileInput" type="file" accept=".urubf" style="display:none;margin-top:8px">
+
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button id="decodeBtn">Decode last loaded</button>
+          <button id="hexPreview">Hex preview</button>
+          <div class="muted" id="fileInfo">No file loaded</div>
+        </div>
+
+        <hr style="margin:12px 0;border:none;border-top:1px solid rgba(255,255,255,0.02)">
+
+        <label>Decoded output</label>
+        <pre id="decodedOutput">(decoded output will appear here)</pre>
+      </div>
+    </div>
+
+    <footer>
+      <div class="small">Made for the web — works better with PC.</div>
+      <div class="small">Version 3 using UBF version 1.</div>
+    </footer>
+  </div>
+
+<script>
+const enc = new TextEncoder();
+const dec = new TextDecoder('utf-8');
+function byteTo8bit(b){return (b>>>0).toString(2).padStart(8,'0');}
+function toHex(u8){return Array.from(u8).map(b=>b.toString(16).padStart(2,'0')).join(' ');} 
+function downloadBlob(blob, name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();URL.revokeObjectURL(a.href);}
+
+const versionEl=document.getElementById('version'),markerEl=document.getElementById('marker'),msgEl=document.getElementById('msg');
+const encodeBtn=document.getElementById('encodeBtn'),encodePreview=document.getElementById('encodePreview'),makeLink=document.getElementById('makeLink'),permalink=document.getElementById('permalink');
+const dropArea=document.getElementById('dropArea'),fileInput=document.getElementById('fileInput'),decodeBtn=document.getElementById('decodeBtn'),decodedOutput=document.getElementById('decodedOutput'),fileInfo=document.getElementById('fileInfo'),hexPreviewBtn=document.getElementById('hexPreview');
+
+let lastFileBytes=null,lastFilename='';
+
+// ENCODE
+encodeBtn.addEventListener('click',()=>{
+  const version=versionEl.value||'1',marker=markerEl.value||'L',msg=msgEl.value||'';
+  const versionBits=Array.from(enc.encode(version)).map(byteTo8bit).join('');
+  const markerBits=Array.from(enc.encode(marker)).map(byteTo8bit).join('');
+  const msgBits=Array.from(enc.encode(msg)).map(byteTo8bit).join(',');
+  const finalText=versionBits+'-/-'+markerBits+'-//-'+msgBits;
+  downloadBlob(new Blob([enc.encode(finalText)],{type:'application/octet-stream'}),'message.urubf');
+});
+
+encodePreview.addEventListener('click',()=>{
+  const versionBits=Array.from(enc.encode(versionEl.value||'1')).map(byteTo8bit).join('');
+  const markerBits=Array.from(enc.encode(markerEl.value||'L')).map(byteTo8bit).join('');
+  const msgBits=Array.from(enc.encode(msgEl.value||'')).map(byteTo8bit).join(',');
+  alert('Preview (first 512 chars):\n'+(versionBits+'-/-'+markerBits+'-//-'+msgBits).slice(0,512));
+});
+
+makeLink.addEventListener('click',()=>{
+  const versionBits=Array.from(enc.encode(versionEl.value||'1')).map(byteTo8bit).join('');
+  const markerBits=Array.from(enc.encode(markerEl.value||'L')).map(byteTo8bit).join('');
+  const msgBits=Array.from(enc.encode(msgEl.value||'')).map(byteTo8bit).join(',');
+  const payload=enc.encode(versionBits+'-/-'+markerBits+'-//-'+msgBits);
+  const b64=btoa(String.fromCharCode(...payload));
+  const url=location.origin+location.pathname+'#urubf='+b64;
+  permalink.value=url;navigator.clipboard?.writeText(url).catch(()=>{});
+});
+
+window.addEventListener('load',()=>{
+  if(location.hash.startsWith('#urubf=')){try{
+    const b64=location.hash.slice('#urubf='.length);
+    const str=atob(b64);
+    const u8=new Uint8Array([...str].map(c=>c.charCodeAt(0)));
+    loadFileBytes(u8,'shared.urubf');decodeBytesAndShow(u8);
+  }catch(e){console.warn('Failed to load share');}}
+});
+
+['dragenter','dragover'].forEach(ev=>dropArea.addEventListener(ev,e=>{e.preventDefault();dropArea.style.borderColor='rgba(11,95,255,0.9)'}));
+['dragleave','drop'].forEach(ev=>dropArea.addEventListener(ev,e=>{e.preventDefault();dropArea.style.borderColor='rgba(255,255,255,0.03)'}));
+dropArea.addEventListener('click',()=>fileInput.click());
+fileInput.addEventListener('change',async e=>{const f=e.target.files[0];if(f)await handleFile(f);});
+dropArea.addEventListener('drop',async e=>{const f=e.dataTransfer.files[0];if(f)await handleFile(f);});
+
+async function handleFile(file){const ab=await file.arrayBuffer();const u8=new Uint8Array(ab);loadFileBytes(u8,file.name);decodeBytesAndShow(u8);}
+function loadFileBytes(u8,name){lastFileBytes=u8;lastFilename=name;fileInfo.textContent=name+' · '+u8.length+' bytes';}
+
+function isAllBits(s){return /^[01]+$/.test(s);}
+function isCommaSeparatedBits(s){return /^\s*[01]{8}(\s*,\s*[01]{8})*\s*$/.test(s);}
+function bitsToUint8Array(bits){const clean=bits.replace(/\s+/g,'');if(clean.length%8!==0)return null;const out=new Uint8Array(clean.length/8);for(let i=0;i<clean.length;i+=8){out[i/8]=parseInt(clean.slice(i,i+8),2);}return out;}
+function tokensBitsToUint8Array(tokens){const bytes=[];for(const t of tokens){const tok=t.trim();if(tok==='')continue;if(!/^[01]{8}$/.test(tok))return null;bytes.push(parseInt(tok,2));}return new Uint8Array(bytes);}
+
+function decodeBytesAndShow(u8){
+  let text='';try{text=dec.decode(u8);}catch(e){decodedOutput.textContent='Failed to decode file as UTF-8.';return;}
+  const sep1='-/-',sep2='-//-';const i1=text.indexOf(sep1);if(i1===-1){decodedOutput.textContent='Invalid file: missing -/- separator.';return;}
+  const versionPart=text.slice(0,i1);const rest=text.slice(i1+sep1.length);const i2=rest.indexOf(sep2);if(i2===-1){decodedOutput.textContent='Invalid file: missing -//- separator.';return;}
+  const markerPart=rest.slice(0,i2);const messagePart=rest.slice(i2+sep2.length);
+  let decodedVersion=null,decodedMarker=null,decodedMessage=null,mode=null;
+  if(isAllBits(versionPart)&&(versionPart.length%8===0)&&isAllBits(markerPart)&&(markerPart.length%8===0)&&isCommaSeparatedBits(messagePart)){
+    mode='bitstring';const vBytes=bitsToUint8Array(versionPart);const mBytes=bitsToUint8Array(markerPart);const msgTokens=messagePart.split(',');const msgBytes=tokensBitsToUint8Array(msgTokens);
+    try{decodedVersion=dec.decode(vBytes);}catch(e){decodedVersion=String.fromCharCode(...vBytes);}try{decodedMarker=dec.decode(mBytes);}catch(e){decodedMarker=String.fromCharCode(...mBytes);}try{decodedMessage=dec.decode(msgBytes);}catch(e){decodedMessage=String.fromCharCode(...msgBytes);}  
+  }else if(isAllBits(versionPart)&&(versionPart.length%8===0)&&isAllBits(markerPart)&&(markerPart.length%8===0)&&!messagePart.includes(',')){
+    mode='bitstring_contiguous_msg';const vBytes=bitsToUint8Array(versionPart);const mBytes=bitsToUint8Array(markerPart);const msgBytes=bitsToUint8Array(messagePart);
+    try{decodedVersion=dec.decode(vBytes);}catch(e){decodedVersion=String.fromCharCode(...vBytes);}try{decodedMarker=dec.decode(mBytes);}catch(e){decodedMarker=String.fromCharCode(...mBytes);}try{decodedMessage=dec.decode(msgBytes);}catch(e){decodedMessage=String.fromCharCode(...msgBytes);}  
+  }else{mode='plain';decodedVersion=versionPart;decodedMarker=markerPart;decodedMessage=messagePart;}
+  const markerCheck=decodedMarker==='L'||decodedMarker==='l';const versionCheck=decodedVersion==='1';
+  let out='Detected mode: '+mode+'\nVersion: '+JSON.stringify(decodedVersion)+'\nMarker: '+JSON.stringify(decodedMarker)+'\n';
+  if(!markerCheck){out+='\n⚠ Marker is not L/l — stopping.\n\nRaw message preview:\n'+messagePart.slice(0,800);decodedOutput.textContent=out;return;}
+  if(!versionCheck){out+='\n⚠ Unsupported version (expected "1").\n\nDecoded message (shown anyway):\n'+decodedMessage;decodedOutput.textContent=out;return;}
+  out+='\n✅ Marker OK and version OK. Decoded message below:\n\n'+decodedMessage;decodedOutput.textContent=out;
+}
+decodeBtn.addEventListener('click',()=>{if(!lastFileBytes){alert('No file loaded');return;}decodeBytesAndShow(lastFileBytes);});
+hexPreviewBtn.addEventListener('click',()=>{if(!lastFileBytes){alert('No file loaded');return;}alert('Hex preview (first 512 bytes):\n'+toHex(lastFileBytes.slice(0,512)));});
+dropArea.addEventListener('dblclick',()=>{const t=prompt('Paste raw file bytes as UTF-8 text or bitstring text here:');if(t){try{const u8=enc.encode(t);loadFileBytes(u8,'pasted.urubf');decodeBytesAndShow(u8);}catch(e){alert('Failed to load pasted data');}}});
+</script>
+</body>
+</html>

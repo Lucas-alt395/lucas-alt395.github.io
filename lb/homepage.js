@@ -32,6 +32,7 @@ const firebaseConfig = {
                 document.getElementById('loggedUserEmail').innerText=userData.email;
                 document.getElementById('loggedUserLName').innerText=userData.lastName;
                 document.getElementById('loggedUserBalance').innerText=userData.balance;
+                document.getElementById('loggedUserTransactions').innerText=userData.transactions;
             }
             else{
                 console.log("no document found matching id")

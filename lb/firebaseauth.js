@@ -44,7 +44,7 @@
             email: email,
             firstName: firstName,
             lastName:lastName,
-            balance: 100
+            balance: 200
         };
         showMessage('Account Created Successfully', 'signUpMessage');
         const docRef=doc(db, "users", user.uid);

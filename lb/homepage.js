@@ -5,6 +5,12 @@ import{getFirestore, getDoc, doc} from "https://www.gstatic.com/firebasejs/10.11
 const firebaseConfig = {
     //YOUR COPIED FIREBASE PART SHOULD BE HERE
  //WATCH THIS VIDEO TO LEARN WHAT TO PUT HERE   https://youtu.be/_Xczf06n6x0
+    apiKey: "AIzaSyCcpJXEljlctWX28PzeuwxrCGgg9sHqx4Q",
+    authDomain: "luukische-bank-reaal.firebaseapp.com",
+    projectId: "luukische-bank-reaal",
+    storageBucket: "luukische-bank-reaal.firebasestorage.app",
+    messagingSenderId: "270642140466",
+    appId: "1:270642140466:web:252b99b44eda3d14f4f32b"
   };
  
   // Initialize Firebase

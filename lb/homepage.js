@@ -12,44 +12,40 @@ const firebaseConfig = {
     appId: "1:270642140466:web:252b99b44eda3d14f4f32b"
 };
 
-// Init Firebase services
+// Init Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getFirestore();
 
 onAuthStateChanged(auth, async (user) => {
     const userId = localStorage.getItem('loggedInUserId');
-
-    if (!userId) {
-        console.log("User ID is missing from localStorage.");
-        window.location.href = "index.html";
-        return;
-    }
+    if (!userId) return (window.location.href = "index.html");
 
     try {
-        const docRef = doc(db, "users", userId);
-        const docSnap = await getDoc(docRef);
-
-        if (!docSnap.exists()) {
-            console.log("Document does not exist.");
-            return;
-        }
+        const docSnap = await getDoc(doc(db, "users", userId));
+        if (!docSnap.exists()) return;
 
         const data = docSnap.data();
 
-        // Fill user details
         document.getElementById("loggedUserFName").innerText = data.firstName;
         document.getElementById("loggedUserLName").innerText = data.lastName;
         document.getElementById("loggedUserEmail").innerText = data.email;
         document.getElementById("loggedUserBalance").innerText = data.balance;
 
-        // === Load transactions (ARRAY) ===
+        // 🔥 Fix transactions
+        let transactions = data.transactions;
+
+        // If Firestore stores them as a map (0, 1, 2...)
+        if (!Array.isArray(transactions)) {
+            transactions = Object.values(transactions);
+        }
+
         const txContainer = document.getElementById("loggedUserTransactions");
 
-        if (Array.isArray(data.transactions) && data.transactions.length > 0) {
-            txContainer.innerHTML = ""; // clear
+        if (transactions.length > 0) {
+            txContainer.innerHTML = "";
 
-            data.transactions.forEach((tx, index) => {
+            transactions.forEach((tx, index) => {
                 const div = document.createElement("div");
                 div.style.marginBottom = "15px";
 
@@ -68,15 +64,13 @@ onAuthStateChanged(auth, async (user) => {
             txContainer.innerHTML = "Geen transacties gevonden.";
         }
 
-    } catch (error) {
-        console.error("Error loading user:", error);
+    } catch (e) {
+        console.error(e);
     }
 });
 
-// ==== LOGOUT ====
+// Logout
 document.getElementById("logout").addEventListener("click", () => {
     localStorage.removeItem('loggedInUserId');
-    signOut(auth)
-        .then(() => (window.location.href = "index.html"))
-        .catch((err) => console.error("Logout failed:", err));
+    signOut(auth).then(() => (window.location.href = "index.html"));
 });

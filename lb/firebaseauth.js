@@ -66,10 +66,10 @@ if (signUp) {
                     firstName: firstName,
                     lastName: lastName,
                     extrainfo: "",
-                    balance: 100,  
+                    balance: 200,  
                     transactions: [
                         {
-                            amount: 100,
+                            amount: 200,
                             type: "transfer",
                             sender: "admin@example.com",
                             reciever: email,

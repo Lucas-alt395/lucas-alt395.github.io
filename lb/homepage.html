@@ -68,6 +68,15 @@
 
     <div><h2>Transacties</h2></div>
     <div id="loggedUserTransactions"></div>
+    
+    <h2>Nieuwe Transactie</h2>
+<form id="newTransactionForm">
+  <input type="number" id="transAmount" placeholder="Hoeveelheid" required>
+  <input type="text" id="transDesc" placeholder="Naar" required>
+  <button type="submit">Nieuwe Transactie</button>
+</form>
+
+<p id="transMessage"></p>
 
     <button id="logout">Logout</button>
 </body>

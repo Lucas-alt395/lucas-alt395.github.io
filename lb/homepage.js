@@ -63,68 +63,6 @@ onAuthStateChanged(auth, async (user) => {
         } else {
             txContainer.innerHTML = "Geen transacties gevonden.";
         }
-        // Firestore refs
-const auth = firebase.auth();
-const db = firebase.firestore();
-
-auth.onAuthStateChanged(async (user) => {
-  if (!user) {
-    window.location.href = "index.html"; // redirect if not logged in
-    return;
-  }
-
-  const userRef = db.collection("users").doc(user.uid);
-  const transRef = userRef.collection("transactions");
-
-  // ---------- ADD TRANSACTION ----------
-  const form = document.getElementById("newTransactionForm");
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const amount = Number(document.getElementById("transAmount").value);
-    const description = document.getElementById("transDesc").value;
-    const msg = document.getElementById("transMessage");
-
-    try {
-      await transRef.add({
-        amount: amount,
-        description: description,
-        timestamp: firebase.firestore.Timestamp.now()
-      });
-
-      msg.innerText = "Transaction added!";
-      msg.style.color = "green";
-
-      form.reset();
-
-      // Reload transaction list
-      loadTransactions();
-
-    } catch (err) {
-      msg.innerText = "Error: " + err.message;
-      msg.style.color = "red";
-    }
-  });
-
-  // ---------- LOAD TRANSACTIONS ----------
-  async function loadTransactions() {
-    const list = document.getElementById("transactionsList");
-    list.innerHTML = "Loading...";
-
-    const snap = await transRef.orderBy("timestamp", "desc").get();
-
-    list.innerHTML = "";
-    snap.forEach(d => {
-      const item = d.data();
-      const li = document.createElement("li");
-      li.textContent = `${item.amount}€ - ${item.description}`;
-      list.appendChild(li);
-    });
-  }
-
-  loadTransactions();
-});
 
     } catch (e) {
         console.error(e);

@@ -1,6 +1,12 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
-import { getFirestore, getDoc, doc } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
+import { 
+    getFirestore, 
+    getDoc, 
+    doc,
+    collection,
+    getDocs
+} from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
 
 // Firebase config
 const firebaseConfig = {
@@ -18,59 +24,72 @@ const auth = getAuth();
 const db = getFirestore();
 
 onAuthStateChanged(auth, async (user) => {
+
     const userId = localStorage.getItem('loggedInUserId');
-    if (!userId) return (window.location.href = "index.html");
+
+    if (!userId) {
+        console.log("User ID missing → redirecting");
+        window.location.href = "index.html";
+        return;
+    }
 
     try {
-        const docSnap = await getDoc(doc(db, "users", userId));
-        if (!docSnap.exists()) return;
+        // Load user profile
+        const docRef = doc(db, "users", userId);
+        const docSnap = await getDoc(docRef);
+
+        if (!docSnap.exists()) {
+            console.log("User doc doesn't exist");
+            return;
+        }
 
         const data = docSnap.data();
 
+        // Fill homepage user info
         document.getElementById("loggedUserFName").innerText = data.firstName;
         document.getElementById("loggedUserLName").innerText = data.lastName;
         document.getElementById("loggedUserEmail").innerText = data.email;
         document.getElementById("loggedUserBalance").innerText = data.balance;
 
-        // 🔥 Fix transactions
-        let transactions = data.transactions;
-
-        // If Firestore stores them as a map (0, 1, 2...)
-        if (!Array.isArray(transactions)) {
-            transactions = Object.values(transactions);
-        }
-
+        // === Load subcollection "transactions" ===
         const txContainer = document.getElementById("loggedUserTransactions");
 
-        if (transactions.length > 0) {
-            txContainer.innerHTML = "";
+        const txRef = collection(db, "users", userId, "transactions");
+        const txSnap = await getDocs(txRef);
 
-            transactions.forEach((tx, index) => {
+        if (txSnap.empty) {
+            txContainer.innerHTML = "Geen transacties gevonden.";
+        } else {
+            txContainer.innerHTML = ""; // clear
+
+            txSnap.forEach((txDoc) => {
+                const tx = txDoc.data();
+
                 const div = document.createElement("div");
                 div.style.marginBottom = "15px";
 
                 div.innerHTML = `
-                    <strong>Transactie #${index + 1}</strong><br>
-                    Type: ${tx.type}<br>
-                    Bedrag: ${tx.amount}<br>
+                    <strong>Transactie</strong><br>
+                    Bedrag: Ł${tx.amount}<br>
                     Datum: ${tx.date}<br>
-                    Van: ${tx.sender}<br>
-                    Naar: ${tx.reciever}
+                    Van: ${tx.from}<br>
+                    Naar: ${tx.to}<br>
+                    Beschrijving: ${tx.description}
                 `;
 
                 txContainer.appendChild(div);
             });
-        } else {
-            txContainer.innerHTML = "Geen transacties gevonden.";
         }
 
-    } catch (e) {
-        console.error(e);
+    } catch (error) {
+        console.error("Error loading user:", error);
     }
 });
 
-// Logout
+// ==== LOGOUT ====
 document.getElementById("logout").addEventListener("click", () => {
     localStorage.removeItem('loggedInUserId');
-    signOut(auth).then(() => (window.location.href = "index.html"));
+    signOut(auth)
+        .then(() => (window.location.href = "index.html"))
+        .catch((err) => console.error("Logout failed:", err));
 });

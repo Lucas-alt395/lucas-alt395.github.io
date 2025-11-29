@@ -70,11 +70,11 @@ onAuthStateChanged(auth, async (user) => {
 
                 div.innerHTML = `
                     <strong>Transactie</strong><br>
-                    Bedrag: Ł${tx.amount}<br>
-                    Datum: ${tx.date}<br>
-                    Van: ${tx.from}<br>
-                    Naar: ${tx.to}<br>
-                    Beschrijving: ${tx.description}
+                    Bedrag: <strong>Ł${tx.amount}</strong><br>
+                    Datum: <strong>${tx.date}</strong><br>
+                    Van: <strong>${tx.from}</strong><br>
+                    Naar: <strong>${tx.to}</strong><br>
+                    Beschrijving: <strong>${tx.description}</strong>
                 `;
 
                 txContainer.appendChild(div);

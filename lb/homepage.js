@@ -1,14 +1,22 @@
+// Import Firebase modules
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
 import { 
-    getFirestore, 
-    getDoc, 
+    getAuth, 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword 
+} from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
+
+import {
+    getFirestore,
     doc,
+    setDoc,
     collection,
-    getDocs
+    addDoc
 } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
 
-// Firebase config
+// ---------------------------------------
+// 🔥 Firebase Configuration
+// ---------------------------------------
 const firebaseConfig = {
     apiKey: "AIzaSyCcpJXEljlctWX28PzeuwxrCGgg9sHqx4Q",
     authDomain: "luukische-bank-reaal.firebaseapp.com",
@@ -18,78 +26,104 @@ const firebaseConfig = {
     appId: "1:270642140466:web:252b99b44eda3d14f4f32b"
 };
 
-// Init Firebase
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getFirestore();
 
-onAuthStateChanged(auth, async (user) => {
 
-    const userId = localStorage.getItem('loggedInUserId');
+// --------------------------------------------------
+// 🚀 FUNCTION: Show floating message
+// --------------------------------------------------
+function showMessage(message, divId) {
+    const messageDiv = document.getElementById(divId);
+    messageDiv.style.display = "block";
+    messageDiv.innerHTML = message;
+    messageDiv.style.opacity = 1;
 
-    if (!userId) {
-        console.log("User ID missing → redirecting");
-        window.location.href = "index.html";
-        return;
-    }
+    setTimeout(() => {
+        messageDiv.style.opacity = 0;
+    }, 5000);
+}
+
+
+// --------------------------------------------------
+// 🚀 SIGN UP
+// --------------------------------------------------
+const signUp = document.getElementById("submitSignUp");
+
+signUp.addEventListener("click", async (event) => {
+    event.preventDefault();
+
+    const email = document.getElementById("rEmail").value;
+    const password = document.getElementById("rPassword").value;
+    const firstName = document.getElementById("fName").value;
+    const lastName = document.getElementById("lName").value;
 
     try {
-        // Load user profile
-        const docRef = doc(db, "users", userId);
-        const docSnap = await getDoc(docRef);
+        const userCred = await createUserWithEmailAndPassword(auth, email, password);
+        const uid = userCred.user.uid;
 
-        if (!docSnap.exists()) {
-            console.log("User doc doesn't exist");
-            return;
-        }
+        // --- Create main user doc ---
+        await setDoc(doc(db, "users", uid), {
+            email: email,
+            firstName: firstName,
+            lastName: lastName,
+            balance: 200
+        });
 
-        const data = docSnap.data();
+        // --- Create initial subcollection entry ---
+        await addDoc(collection(db, "users", uid, "transactions"), {
+            amount: 0,
+            sender: "BANK",
+            reciever: `${firstName} ${lastName}`,
+            date: new Date().toISOString()
+        });
 
-        // Fill homepage user info
-        document.getElementById("loggedUserFName").innerText = data.firstName;
-        document.getElementById("loggedUserLName").innerText = data.lastName;
-        document.getElementById("loggedUserEmail").innerText = data.email;
-        document.getElementById("loggedUserBalance").innerText = data.balance;
+        showMessage("Account Created Successfully", "signUpMessage");
 
-        // === Load subcollection "transactions" ===
-        const txContainer = document.getElementById("loggedUserTransactions");
-
-        const txRef = collection(db, "users", userId, "transactions");
-        const txSnap = await getDocs(txRef);
-
-        if (txSnap.empty) {
-            txContainer.innerHTML = "Geen transacties gevonden.";
-        } else {
-            txContainer.innerHTML = ""; // clear
-
-            txSnap.forEach((txDoc) => {
-                const tx = txDoc.data();
-
-                const div = document.createElement("div");
-                div.style.marginBottom = "15px";
-
-                div.innerHTML = `
-                    <strong>Transactie</strong><br>
-                    Bedrag: <strong>Ł${tx.amount}</strong><br>
-                    Datum: <strong>${tx.date}</strong><br>
-                    Van: <strong>${tx.from}</strong><br>
-                    Naar: <strong>${tx.to}</strong><br>
-                    Beschrijving: <strong>${tx.description}</strong>
-                `;
-
-                txContainer.appendChild(div);
-            });
-        }
+        // redirect
+        window.location.href = "index.html";
 
     } catch (error) {
-        console.error("Error loading user:", error);
+        console.error(error);
+
+        if (error.code === "auth/email-already-in-use") {
+            showMessage("Email already exists!", "signUpMessage");
+        } else {
+            showMessage("Unable to create account", "signUpMessage");
+        }
     }
 });
 
-// ==== LOGOUT ====
-document.getElementById("logout").addEventListener("click", () => {
-    localStorage.removeItem('loggedInUserId');
-    signOut(auth)
-        .then(() => (window.location.href = "index.html"))
-        .catch((err) => console.error("Logout failed:", err));
+
+// --------------------------------------------------
+// 🚀 SIGN IN
+// --------------------------------------------------
+const signIn = document.getElementById("submitSignIn");
+
+signIn.addEventListener("click", async (event) => {
+    event.preventDefault();
+
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    try {
+        const userCred = await signInWithEmailAndPassword(auth, email, password);
+        const uid = userCred.user.uid;
+
+        localStorage.setItem("loggedInUserId", uid);
+
+        showMessage("Login successful", "signInMessage");
+        window.location.href = "homepage.html";
+
+    } catch (error) {
+        console.error(error);
+
+        if (error.code === "auth/invalid-credential") {
+            showMessage("Wrong email or password", "signInMessage");
+        } else {
+            showMessage("Account does not exist", "signInMessage");
+        }
+    }
 });

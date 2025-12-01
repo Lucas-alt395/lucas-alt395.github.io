@@ -1,129 +1,134 @@
-// Import Firebase modules
+// homepage.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
-import { 
-    getAuth, 
-    createUserWithEmailAndPassword, 
-    signInWithEmailAndPassword 
-} from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
-
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
 import {
-    getFirestore,
-    doc,
-    setDoc,
-    collection,
-    addDoc
+  getFirestore,
+  doc,
+  getDoc,
+  collection,
+  getDocs,
+  query,
+  orderBy
 } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
 
-// ---------------------------------------
-// 🔥 Firebase Configuration
-// ---------------------------------------
+// Firebase config (same as your other files)
 const firebaseConfig = {
-    apiKey: "AIzaSyCcpJXEljlctWX28PzeuwxrCGgg9sHqx4Q",
-    authDomain: "luukische-bank-reaal.firebaseapp.com",
-    projectId: "luukische-bank-reaal",
-    storageBucket: "luukische-bank-reaal.firebasestorage.app",
-    messagingSenderId: "270642140466",
-    appId: "1:270642140466:web:252b99b44eda3d14f4f32b"
+  apiKey: "AIzaSyCcpJXEljlctWX28PzeuwxrCGgg9sHqx4Q",
+  authDomain: "luukische-bank-reaal.firebaseapp.com",
+  projectId: "luukische-bank-reaal",
+  storageBucket: "luukische-bank-reaal.firebasestorage.app",
+  messagingSenderId: "270642140466",
+  appId: "1:270642140466:web:252b99b44eda3d14f4f32b"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getFirestore();
 
-
-// --------------------------------------------------
-// 🚀 FUNCTION: Show floating message
-// --------------------------------------------------
-function showMessage(message, divId) {
-    const messageDiv = document.getElementById(divId);
-    messageDiv.style.display = "block";
-    messageDiv.innerHTML = message;
-    messageDiv.style.opacity = 1;
-
-    setTimeout(() => {
-        messageDiv.style.opacity = 0;
-    }, 5000);
+// helper
+function safeSetText(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.innerText = text ?? "";
 }
 
+// Wait for auth state — still use localStorage as fallback
+onAuthStateChanged(auth, async (user) => {
+  try {
+    // *** This line was removed earlier — it's back now ***
+    // prefer the signed-in user's uid, otherwise use localStorage
+    const userId = user?.uid || localStorage.getItem("loggedInUserId");
 
-// --------------------------------------------------
-// 🚀 SIGN UP
-// --------------------------------------------------
-const signUp = document.getElementById("submitSignUp");
-
-signUp.addEventListener("click", async (event) => {
-    event.preventDefault();
-
-    const email = document.getElementById("rEmail").value;
-    const password = document.getElementById("rPassword").value;
-    const firstName = document.getElementById("fName").value;
-    const lastName = document.getElementById("lName").value;
-
-    try {
-        const userCred = await createUserWithEmailAndPassword(auth, email, password);
-        const uid = userCred.user.uid;
-
-        // --- Create main user doc ---
-        await setDoc(doc(db, "users", uid), {
-            email: email,
-            firstName: firstName,
-            lastName: lastName,
-            balance: 200
-        });
-
-        // --- Create initial subcollection entry ---
-        await addDoc(collection(db, "users", uid, "transactions"), {
-            amount: 0,
-            sender: "BANK",
-            reciever: `${firstName} ${lastName}`,
-            date: new Date().toISOString()
-        });
-
-        showMessage("Account Created Successfully", "signUpMessage");
-
-        // redirect
-        window.location.href = "index.html";
-
-    } catch (error) {
-        console.error(error);
-
-        if (error.code === "auth/email-already-in-use") {
-            showMessage("Email already exists!", "signUpMessage");
-        } else {
-            showMessage("Unable to create account", "signUpMessage");
-        }
+    if (!userId) {
+      console.warn("No UID found (auth + localStorage missing). Redirecting to login.");
+      window.location.href = "index.html";
+      return;
     }
+
+    console.log("Loading homepage for uid:", userId);
+
+    // Load the user document
+    const userDocRef = doc(db, "users", userId);
+    const userSnap = await getDoc(userDocRef);
+
+    if (!userSnap.exists()) {
+      console.warn("User document not found for uid:", userId);
+      window.location.href = "index.html";
+      return;
+    }
+
+    const data = userSnap.data();
+
+    safeSetText("loggedUserFName", data.firstName || "");
+    safeSetText("loggedUserLName", data.lastName || "");
+    safeSetText("loggedUserEmail", data.email || "");
+    safeSetText("loggedUserBalance", data.balance ?? "0");
+
+    // Load transactions from subcollection users/{uid}/transactions
+    const txContainer = document.getElementById("loggedUserTransactions");
+    if (!txContainer) return;
+
+    txContainer.innerHTML = "Laden...";
+
+    const txColl = collection(db, "users", userId, "transactions");
+
+    // Try ordering by createdAt if you store it, otherwise just fetch
+    let txQuery;
+    try {
+      txQuery = query(txColl, orderBy("createdAt", "desc"));
+    } catch (e) {
+      // if createdAt doesn't exist or orderBy throws, fallback to txColl directly
+      txQuery = txColl;
+    }
+
+    const txSnap = await getDocs(txQuery);
+
+    if (txSnap.empty) {
+      txContainer.innerHTML = "Geen transacties gevonden.";
+    } else {
+      txContainer.innerHTML = "";
+      // build array (so we can sort or inspect if needed)
+      const txArr = [];
+      txSnap.forEach(docSnap => {
+        const tx = docSnap.data();
+        tx._id = docSnap.id;
+        txArr.push(tx);
+      });
+
+      // Optional: if createdAt is a Firestore Timestamp, you could sort here.
+      // Render
+      txArr.forEach((tx, i) => {
+        const div = document.createElement("div");
+        div.className = "transactionBox";
+        div.style.marginBottom = "12px";
+        div.innerHTML = `
+          <strong>Transactie ${i+1}</strong><br>
+          Bedrag: ${tx.amount ?? "—"} Luukies<br>
+          Datum: ${tx.date ?? tx.createdAt ?? "—"}<br>
+          Van: ${tx.from ?? tx.sender ?? "—"}<br>
+          Naar: ${tx.to ?? tx.reciever ?? "—"}<br>
+          Beschrijving: ${tx.description ?? "—"}
+        `;
+        txContainer.appendChild(div);
+      });
+    }
+
+  } catch (err) {
+    console.error("homepage load error:", err);
+    const txContainer = document.getElementById("loggedUserTransactions");
+    if (txContainer) txContainer.innerText = "Error bij laden transacties — check console.";
+  }
 });
 
-
-// --------------------------------------------------
-// 🚀 SIGN IN
-// --------------------------------------------------
-const signIn = document.getElementById("submitSignIn");
-
-signIn.addEventListener("click", async (event) => {
-    event.preventDefault();
-
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-
+// Logout (safe guard)
+const logoutEl = document.getElementById("logout");
+if (logoutEl) {
+  logoutEl.addEventListener("click", async () => {
     try {
-        const userCred = await signInWithEmailAndPassword(auth, email, password);
-        const uid = userCred.user.uid;
-
-        localStorage.setItem("loggedInUserId", uid);
-
-        showMessage("Login successful", "signInMessage");
-        window.location.href = "homepage.html";
-
-    } catch (error) {
-        console.error(error);
-
-        if (error.code === "auth/invalid-credential") {
-            showMessage("Wrong email or password", "signInMessage");
-        } else {
-            showMessage("Account does not exist", "signInMessage");
-        }
+      localStorage.removeItem("loggedInUserId");
+      await signOut(auth);
+      window.location.href = "index.html";
+    } catch (err) {
+      console.error("Logout failed:", err);
     }
-});
+  });
+}

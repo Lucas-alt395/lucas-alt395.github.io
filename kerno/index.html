@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kerno.</title>
+    <style>
+        body {
+            background-color: #0d1117;
+            color: #c9d1d9;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+        header { padding: 80px 20px; }
+        h1 { color: #58a6ff; font-size: 3rem; margin-bottom: 10px; }
+        p { font-size: 1.2rem; max-width: 600px; margin: 0 auto 20px; }
+        .btn {
+            background-color: #238636;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 20px;
+        }
+        .container { max-width: 800px; margin: auto; padding: 40px 20px; }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 40px;
+            text-align: left;
+        }
+        .feature-card {
+            background: #161b22;
+            padding: 20px;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+        }
+        .footer { color: #8b949e; font-size: 0.9rem; margin-top: 100px; padding-bottom: 50px; }
+        .highlight { color: #3fb950; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Kerno</h1>
+        <p>An OS built by a kid who’s tired of being tracked.</p>
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSd5Tb9UCVWaS9D4Ca7pY1Pche5evU_N68nPpAfg_5q6K-HHnw/viewform?usp=publish-editor" class="btn">Join the Beta Waitlist</a>
+    </header>
+
+    <div class="container">
+        <h2>Why Kerno?</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>🚫 Zero Telemetry</h3>
+                <p>No phoning home. No data mining. Your activity stays on your machine.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🛠 Total Customization</h3>
+                <p>Non customizable UI? NO! Kerno's UI is going to be built to be modified by you.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🕒 No Forced Updates</h3>
+                <p>Update when you want to, not when we tell you to. No more interrupted work.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Built with 💻 by a hobbyist developer. Kerno is a work in progress.</p>
+        <p>&copy; 2026 Kerno OS Project</p>
+    </div>
+
+</body>
+</html>

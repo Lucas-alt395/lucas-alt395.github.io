@@ -15,37 +15,27 @@
 
     <div class="card">
         <h2>Redirecting you shortly</h2>
-        <p id="status">Please wait while we verify the destination...</p>
+        <p id="status">Please wait...</p>
         <div class="loader"></div>
     </div>
 
     <script>
-        // 1. Configuration
-        const ALLOWED_DOMAIN = "https://lucas-alt395.github.io/";
+        // Configuration
         const DELAY_MS = 3000;
 
-        // 2. Parse the URL
+        // Get the redirect URL from the parameter
         const params = new URLSearchParams(window.location.search);
         const target = params.get('redirect');
         const statusText = document.getElementById('status');
 
-        // 3. Validation Logic
         if (target) {
-            // Check if the target starts with your allowed domain
-            if (target.startsWith(ALLOWED_DOMAIN)) {
-                statusText.innerText = "Verified. Redirecting to " + target + " in 3 seconds...";
-                
-                setTimeout(() => {
-                    window.location.href = target;
-                }, DELAY_MS);
-            } else {
-                // Security block
-                statusText.style.color = "red";
-                statusText.innerText = "Error: Unauthorized redirect destination.";
-                console.error("Security Block: Attempted redirect to unauthorized domain:", target);
-            }
+            statusText.innerText = "Redirecting to " + target + "...";
+            
+            setTimeout(() => {
+                window.location.href = target;
+            }, DELAY_MS);
         } else {
-            statusText.innerText = "No redirect parameter found.";
+            statusText.innerText = "No destination specified in the URL parameter.";
         }
     </script>
 </body>

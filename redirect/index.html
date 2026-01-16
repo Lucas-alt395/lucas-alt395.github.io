@@ -16,8 +16,10 @@
 <body>
 
     <div class="card">
+        <h1>Redirecter</h1>
         <h2 id="custom-message">Loading...</h2>
         <p id="status">Preparing to redirect...</p>
+        <p>Lucas-alt395 Website</p>
         <div class="loader"></div>
     </div>
 
@@ -39,7 +41,7 @@
 
         // 3. Handle the Redirect
         if (targetUrl) {
-            statusElement.innerText = "You will be moved to the destination in 3 seconds.";
+            statusElement.innerText = "Redirecting shortly...";
             
             setTimeout(() => {
                 window.location.href = targetUrl;

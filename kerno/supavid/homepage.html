@@ -4,59 +4,90 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SupaVid - Home</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        body { font-family: sans-serif; background: #0f0f0f; color: white; margin: 0; }
+        nav { display: flex; justify-content: space-between; padding: 1rem 2rem; background: #202020; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 20px; }
+        .video-card { background: #1a1a1a; border-radius: 12px; overflow: hidden; text-decoration: none; color: white; border: 1px solid #333; }
+        .video-card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; }
+        .video-info { padding: 12px; }
+        #debug-log { background: #330000; color: #ff9999; padding: 10px; font-family: monospace; font-size: 12px; }
+    </style>
 </head>
 <body>
+
+    <div id="debug-log">Status: Initializing...</div>
+
     <nav>
-        <a href="homepage.html" class="logo">SupaVid</a>
-        <div class="nav-links">
-            <a href="upload.html">Upload</a>
-            <a href="login.html">Login</a>
+        <a href="homepage.html"><b>SupaVid</b></a>
+        <div>
+            <a href="upload.html" style="color:white; margin-right:15px;">Upload</a>
+            <a href="login.html" style="color:white;">Login</a>
         </div>
     </nav>
 
     <div id="video-grid" class="grid">
-        <p>Loading videos...</p>
+        <p id="loading-text">Searching for videos...</p>
     </div>
-    
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <script>
-    async function loadFeed() {
-        const grid = document.getElementById('video-grid');
-        const supabaseUrl = 'https://xnvhixwirbpofdkyhtvf.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhudmhpeHdpcmJwb2Zka3lodHZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMzE0NzgsImV4cCI6MjA4MzgwNzQ3OH0.gg6cLfx1PrGTNKztWSqDy3U9W66mNCu6ln5WDDLpyVo'; // Keep using your working key
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-
-        const { data: videos, error } = await supabase
-            .from('videos')
-            .select('*')
-            .order('created_at', { ascending: false });
-
-        if (error) {
-            grid.innerHTML = `<p style="color:red">Error: ${error.message}</p>`;
-            return;
+        const logBox = document.getElementById('debug-log');
+        function updateLog(msg, color = "#ff9999") {
+            logBox.innerHTML += "<br>> " + msg;
+            logBox.style.color = color;
         }
 
-        if (!videos || videos.length === 0) {
-            grid.innerHTML = "<p>No videos found. Be the first to upload!</p>";
-            return;
+        async function loadFeed() {
+            try {
+                // 1. PROJECT DETAILS
+                const supabaseUrl = 'https://xnvhixwirbpofdkyhtvf.supabase.co';
+                const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhudmhpeHdpcmJwb2Zka3lodHZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMzE0NzgsImV4cCI6MjA4MzgwNzQ3OH0.gg6cLfx1PrGTNKztWSqDy3U9W66mNCu6ln5WDDLpyVo';
+                
+                if (!window.supabase) {
+                    updateLog("CRITICAL: Supabase library failed to load from CDN!");
+                    return;
+                }
+
+                const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+                updateLog("Connection established...", "yellow");
+
+                // 2. FETCH DATA
+                const { data: videos, error } = await supabase
+                    .from('videos')
+                    .select('*');
+
+                if (error) {
+                    updateLog("DB ERROR: " + error.message);
+                    return;
+                }
+
+                updateLog("Success! Found " + videos.length + " videos.", "lightgreen");
+
+                // 3. RENDER
+                const grid = document.getElementById('video-grid');
+                if (videos.length === 0) {
+                    grid.innerHTML = "<p>Database connected, but no videos found. Check RLS!</p>";
+                } else {
+                    grid.innerHTML = videos.map(vid => `
+                        <a href="video.html?id=${vid.id}" class="video-card">
+                            <img src="${vid.thumbnail_url || 'https://via.placeholder.com/320x180?text=SupaVid'}">
+                            <div class="video-info">
+                                <h3>${vid.title || 'Untitled'}</h3>
+                                <p style="color:#aaa; font-size:12px;">ID: ${vid.id.substring(0,8)}...</p>
+                            </div>
+                        </a>
+                    `).join('');
+                }
+
+            } catch (err) {
+                updateLog("CATCH ERROR: " + err.message);
+            }
         }
 
-        // Render real clickable cards
-        grid.innerHTML = videos.map(vid => `
-            <a href="video.html?id=${vid.id}" class="video-card">
-                <div class="thumbnail-placeholder">
-                    <img src="${vid.thumbnail_url || 'https://via.placeholder.com/320x180?text=SupaVid'}" alt="${vid.title}">
-                </div>
-                <div class="video-info">
-                    <h3>${vid.title || 'Untitled Video'}</h3>
-                    <p>Click to watch</p>
-                </div>
-            </a>
-        `).join('');
-    }
-
-    loadFeed();
-</script>
-
+        // Start the engine
+        loadFeed();
+    </script>
 </body>
 </html>

@@ -19,50 +19,60 @@
         <p>Loading videos...</p>
     </div>
     
-    <script type="module">
-    // We import the library directly from the web to ensure it loads
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    // PUT YOUR ACTUAL KEYS HERE DIRECTLY FOR A TEST
-    const supabaseUrl = 'https://xnvhixwirbpofdkyhtvf.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhudmhpeHdpcmJwb2Zka3lodHZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMzE0NzgsImV4cCI6MjA4MzgwNzQ3OH0.gg6cLfx1PrGTNKztWSqDy3U9W66mNCu6ln5WDDLpyVo';
-    const supabase = createClient(supabaseUrl, supabaseKey);
+<script>
+    // Force a message to appear immediately to prove the script is alive
+    document.write('<div id="debug-log" style="color:yellow; background:black; padding:10px; font-family:monospace; font-size:12px;">Script started...</div>');
+
+    function log(msg) {
+        document.getElementById('debug-log').innerHTML += '<br>> ' + msg;
+    }
 
     async function loadFeed() {
         const grid = document.getElementById('video-grid');
         
         try {
-            console.log("Attempting to fetch...");
+            // 1. Initialize (Use YOUR actual URL and Key)
+            const supabaseUrl = 'https://your-project.supabase.co';
+            const supabaseKey = 'your-anon-key';
+            const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+            log("Supabase Client initialized.");
+
+            // 2. Fetch
             const { data: videos, error } = await supabase
                 .from('videos')
                 .select('*');
 
             if (error) {
-                document.body.insertAdjacentHTML('afterbegin', `<div style="background:red; color:white; padding:20px;">DB ERROR: ${error.message}</div>`);
+                log("DB Error: " + error.message);
                 return;
             }
+
+            log("Fetch successful. Rows found: " + (videos ? videos.length : 0));
 
             if (!videos || videos.length === 0) {
-                grid.innerHTML = "<p>Connected, but 0 videos found. Check RLS Policies!</p>";
+                grid.innerHTML = "Connected, but no videos in table.";
                 return;
             }
 
+            // 3. Render
             grid.innerHTML = videos.map(vid => `
                 <div style="border:1px solid #333; margin:10px; padding:10px;">
-                    <img src="${vid.thumbnail_url || ''}" style="width:100%; max-width:300px;">
                     <h3>${vid.title || 'Untitled'}</h3>
+                    <p>ID: ${vid.id}</p>
                 </div>
             `).join('');
 
         } catch (err) {
-            // This will show a big red box on your phone if the code crashes
-            document.body.insertAdjacentHTML('afterbegin', `<div style="background:darkorange; color:white; padding:20px;">CRASH: ${err.message}</div>`);
+            log("CRASH: " + err.message);
         }
     }
 
-    loadFeed();
+    // Run after a tiny delay to ensure HTML is ready
+    setTimeout(loadFeed, 500);
 </script>
 
-
+    
 </body>
 </html>

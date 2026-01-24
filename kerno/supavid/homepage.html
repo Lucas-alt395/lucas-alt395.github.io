@@ -55,8 +55,14 @@
 
                 // 2. FETCH DATA
                 const { data: videos, error } = await supabase
-                    .from('videos')
-                    .select('*');
+    .from('videos')
+    .select(`
+        *,
+        profiles (
+            username
+        )
+    `);
+
 
                 if (error) {
                     updateLog("DB ERROR: " + error.message);
@@ -75,6 +81,8 @@
                             <img src="${vid.thumbnail_url || 'https://via.placeholder.com/320x180?text=SupaVid'}">
                             <div class="video-info">
                                 <h3>${vid.title || 'Untitled'}</h3>
+                                <p style="color:#aaa; font-size:14px; margin: 5px 0;">
+                By: ${vid.profiles ? vid.profiles.username : 'Unknown Creator'}</p>
                                 <p style="color:#aaa; font-size:12px;">ID: ${vid.id.substring(0,8)}...</p>
                             </div>
                         </a>

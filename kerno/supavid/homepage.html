@@ -18,52 +18,51 @@
     <div id="video-grid" class="grid">
         <p>Loading videos...</p>
     </div>
-
+    
     <script type="module">
-    import { supabase } from './js/config.js';
+    // We import the library directly from the web to ensure it loads
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    // PUT YOUR ACTUAL KEYS HERE DIRECTLY FOR A TEST
+    const supabaseUrl = 'https://xnvhixwirbpofdkyhtvf.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhudmhpeHdpcmJwb2Zka3lodHZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMzE0NzgsImV4cCI6MjA4MzgwNzQ3OH0.gg6cLfx1PrGTNKztWSqDy3U9W66mNCu6ln5WDDLpyVo';
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     async function loadFeed() {
         const grid = document.getElementById('video-grid');
         
         try {
-            // 1. Check if supabase initialized
-            if (!supabase) {
-                alert("Config Error: Supabase client not found. Check js/config.js path.");
-                return;
-            }
-
-            // 2. Try the fetch
+            console.log("Attempting to fetch...");
             const { data: videos, error } = await supabase
                 .from('videos')
-                .select('*'); // Simplified for testing
+                .select('*');
 
             if (error) {
-                alert("Database Error: " + error.message);
-                grid.innerHTML = `<p>Error: ${error.message}</p>`;
+                document.body.insertAdjacentHTML('afterbegin', `<div style="background:red; color:white; padding:20px;">DB ERROR: ${error.message}</div>`);
                 return;
             }
 
-            // 3. Check if any data came back
             if (!videos || videos.length === 0) {
-                grid.innerHTML = "<p>No videos found. Did you turn on RLS?</p>";
+                grid.innerHTML = "<p>Connected, but 0 videos found. Check RLS Policies!</p>";
                 return;
             }
 
-            // 4. Render
             grid.innerHTML = videos.map(vid => `
-                <a href="video.html?id=${vid.id}" class="video-card">
-                    <img src="${vid.thumbnail_url || 'https://via.placeholder.com/320x180'}" style="width:100%">
-                    <h3>${vid.title}</h3>
-                </a>
+                <div style="border:1px solid #333; margin:10px; padding:10px;">
+                    <img src="${vid.thumbnail_url || ''}" style="width:100%; max-width:300px;">
+                    <h3>${vid.title || 'Untitled'}</h3>
+                </div>
             `).join('');
 
         } catch (err) {
-            alert("Crash Report: " + err.message);
+            // This will show a big red box on your phone if the code crashes
+            document.body.insertAdjacentHTML('afterbegin', `<div style="background:darkorange; color:white; padding:20px;">CRASH: ${err.message}</div>`);
         }
     }
 
     loadFeed();
 </script>
+
 
 </body>
 </html>

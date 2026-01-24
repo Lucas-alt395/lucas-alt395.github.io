@@ -20,40 +20,50 @@
     </div>
 
     <script type="module">
-        import { supabase } from './js/config.js';
+    import { supabase } from './js/config.js';
 
-        async function loadFeed() {
-            const grid = document.getElementById('video-grid');
-            
-            // Fetch videos and join with profiles to get the username
-            const { data: videos, error } = await supabase
-                .from('videos')
-                .select(`
-                    id, 
-                    title, 
-                    thumbnail_url, 
-                    owner_id,
-                    profiles (username)
-                `)
-                .order('created_at', { ascending: false });
-
-            if (error) {
-                grid.innerHTML = `<p>Error loading videos: ${error.message}</p>`;
+    async function loadFeed() {
+        const grid = document.getElementById('video-grid');
+        
+        try {
+            // 1. Check if supabase initialized
+            if (!supabase) {
+                alert("Config Error: Supabase client not found. Check js/config.js path.");
                 return;
             }
 
+            // 2. Try the fetch
+            const { data: videos, error } = await supabase
+                .from('videos')
+                .select('*'); // Simplified for testing
+
+            if (error) {
+                alert("Database Error: " + error.message);
+                grid.innerHTML = `<p>Error: ${error.message}</p>`;
+                return;
+            }
+
+            // 3. Check if any data came back
+            if (!videos || videos.length === 0) {
+                grid.innerHTML = "<p>No videos found. Did you turn on RLS?</p>";
+                return;
+            }
+
+            // 4. Render
             grid.innerHTML = videos.map(vid => `
                 <a href="video.html?id=${vid.id}" class="video-card">
-                    <img src="${vid.thumbnail_url || 'https://via.placeholder.com/320x180'}" alt="${vid.title}">
-                    <div class="video-info">
-                        <h3>${vid.title}</h3>
-                        <p>${vid.profiles?.username || 'Unknown Creator'}</p>
-                    </div>
+                    <img src="${vid.thumbnail_url || 'https://via.placeholder.com/320x180'}" style="width:100%">
+                    <h3>${vid.title}</h3>
                 </a>
             `).join('');
-        }
 
-        loadFeed();
-    </script>
+        } catch (err) {
+            alert("Crash Report: " + err.message);
+        }
+    }
+
+    loadFeed();
+</script>
+
 </body>
 </html>

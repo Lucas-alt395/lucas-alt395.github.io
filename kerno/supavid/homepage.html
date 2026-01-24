@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SupaVid - Home</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav>
+        <a href="homepage.html" class="logo">SupaVid</a>
+        <div class="nav-links">
+            <a href="upload.html">Upload</a>
+            <a href="login.html">Login</a>
+        </div>
+    </nav>
+
+    <div id="video-grid" class="grid">
+        <p>Loading videos...</p>
+    </div>
+
+    <script type="module">
+        import { supabase } from './js/config.js';
+
+        async function loadFeed() {
+            const grid = document.getElementById('video-grid');
+            
+            // Fetch videos and join with profiles to get the username
+            const { data: videos, error } = await supabase
+                .from('videos')
+                .select(`
+                    id, 
+                    title, 
+                    thumbnail_url, 
+                    owner_id,
+                    profiles (username)
+                `)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                grid.innerHTML = `<p>Error loading videos: ${error.message}</p>`;
+                return;
+            }
+
+            grid.innerHTML = videos.map(vid => `
+                <a href="video.html?id=${vid.id}" class="video-card">
+                    <img src="${vid.thumbnail_url || 'https://via.placeholder.com/320x180'}" alt="${vid.title}">
+                    <div class="video-info">
+                        <h3>${vid.title}</h3>
+                        <p>${vid.profiles?.username || 'Unknown Creator'}</p>
+                    </div>
+                </a>
+            `).join('');
+        }
+
+        loadFeed();
+    </script>
+</body>
+</html>

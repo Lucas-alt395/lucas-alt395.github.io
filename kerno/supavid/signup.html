@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SupaVid - Sign Up</title>
+    <style>
+        body { font-family: sans-serif; background: #0f0f0f; color: white; margin: 0; display: flex; flex-direction: column; align-items: center; }
+        nav { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; background: #202020; border-bottom: 1px solid #333; box-sizing: border-box; }
+        .logo { font-size: 1.5rem; font-weight: bold; color: #ff0000; text-decoration: none; }
+        .form-container { background: #1a1a1a; padding: 30px; border-radius: 12px; border: 1px solid #333; margin-top: 50px; width: 90%; max-width: 400px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: 1px solid #444; background: #000; color: white; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #ff0000; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        #status-bar { width: 100%; background: #1a0000; color: #ff9999; padding: 8px 20px; font-family: monospace; font-size: 12px; border-bottom: 1px solid #400; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+
+    <div id="status-bar">> Awaiting details...</div>
+
+    <nav><a href="homepage.html" class="logo">SupaVid</a></nav>
+
+    <div class="form-container">
+        <h2>Create Account</h2>
+        <input type="text" id="username" placeholder="Username (Unique)" required>
+        <input type="email" id="email" placeholder="Email Address" required>
+        <input type="password" id="password" placeholder="Create Password" required>
+        <button onclick="handleSignup()">Sign Up</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        const status = document.getElementById('status-bar');
+
+        async function handleSignup() {
+            const user = document.getElementById('username').value.toLowerCase().trim();
+            const email = document.getElementById('email').value.trim();
+            const pass = document.getElementById('password').value.trim();
+
+            if (!user || !email || !pass) return alert("Fill all fields!");
+
+            const supabaseUrl = 'https://xnvhixwirbpofdkyhtvf.supabase.co';
+            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhudmhpeHdpcmJwb2Zka3lodHZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMzE0NzgsImV4cCI6MjA4MzgwNzQ3OH0.gg6cLfx1PrGTNKztWSqDy3U9W66mNCu6ln5WDDLpyVo';
+            const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+            try {
+                // STEP 1: Check reserved names table 'un'
+                status.innerHTML = "> Checking username availability...";
+                const { data: reserved } = await supabase
+                    .from('un')
+                    .select('error')
+                    .eq('reserved_name', user)
+                    .single();
+
+                if (reserved) {
+                    status.innerHTML = "> Error: Username is restricted.";
+                    alert(reserved.error);
+                    return;
+                }
+
+                // STEP 2: Create user in Supabase Auth
+                status.innerHTML = "> Creating account in Auth...";
+                const { data: authData, error: authError } = await supabase.auth.signUp({
+                    email: email,
+                    password: pass
+                });
+
+                if (authError) throw authError;
+
+                const newUser = authData.user;
+                if (!newUser) throw new Error("Signup failed - no user returned.");
+
+                // STEP 3: Create the profile in the 'profiles' table
+                status.innerHTML = "> Initializing your database profile...";
+                const { error: profileError } = await supabase
+                    .from('profiles')
+                    .insert([
+                        { id: newUser.id, username: user }
+                    ]);
+
+                if (profileError) {
+                    status.innerHTML = "> Error creating profile: " + profileError.message;
+                    console.error(profileError);
+                    alert("Auth worked, but profile failed: " + profileError.message);
+                } else {
+                    status.innerHTML = "> Success! Account and Profile created.";
+                    alert("Account created! Verify your email then login.");
+                    window.location.href = 'login.html';
+                }
+
+            } catch (err) {
+                status.innerHTML = "> FATAL ERROR: " + err.message;
+                alert(err.message);
+            }
+        }
+    </script>
+</body>
+</html>

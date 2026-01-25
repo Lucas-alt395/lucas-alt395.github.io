@@ -13,75 +13,87 @@
         .logo { font-size: 1.5rem; font-weight: bold; color: #ff0000; text-decoration: none; border-radius: 4px; padding: 4px 8px; }
         .nav-links a { color: white; text-decoration: none; margin-left: 15px; font-size: 0.9rem; padding: 10px; border-radius: 8px; display: inline-block; }
 
-        /* VIDEO GRID */
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; padding: 25px; }
+        /* VIDEO GRID - Optimized for TV Screen sizes */
+        .grid { 
+            display: grid; 
+            /* minmax(240px) ensures we fit about 4-6 videos per row on a TV instead of 2 huge ones */
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
+            gap: 20px; 
+            padding: 25px; 
+            max-width: 1800px; 
+            margin: 0 auto; 
+        }
 
         /* THE CARD CONTAINER */
         .video-card { 
-            position: relative; /* Crucial for the ghost link */
+            position: relative; 
             background: #1a1a1a; 
-            border-radius: 12px; 
+            border-radius: 10px; 
             overflow: hidden; 
             border: 2px solid transparent; 
             transition: transform 0.2s ease, background 0.2s ease;
             display: flex;
             flex-direction: column;
+            height: 100%;
         }
 
-        .video-card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; border-bottom: 1px solid #333; }
-        .video-info { padding: 15px; position: relative; }
-        .video-info h3 { margin: 0; font-size: 1.1rem; line-height: 1.4; color: white; }
+        .video-card img { 
+            width: 100%; 
+            aspect-ratio: 16/9; 
+            object-fit: cover; 
+            display: block; 
+            border-bottom: 1px solid #333; 
+        }
+        
+        .video-info { padding: 12px; position: relative; flex-grow: 1; }
+        .video-info h3 { margin: 0; font-size: 1rem; line-height: 1.3; color: white; }
         
         /* META ROW */
-        .meta-row { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+        .meta-row { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
         
         /* THE GHOST LINK (Main Video Action) */
         .main-card-link {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            z-index: 1; /* Sits above the image but below the channel link */
-            border-radius: 12px;
+            z-index: 1; 
+            border-radius: 10px;
         }
 
         /* THE CHANNEL LINK (Sits on Top) */
         .creator-link { 
             position: relative; 
-            z-index: 2; /* Sits ABOVE the ghost link */
+            z-index: 2; 
             color: #aaa; 
-            font-size: 0.9rem; 
+            font-size: 0.85rem; 
             text-decoration: none; 
-            padding: 6px 10px; 
-            background: rgba(255,255,255,0.05);
-            border-radius: 6px;
-            transition: color 0.2s;
+            padding: 4px 8px; 
+            background: rgba(255,255,255,0.08);
+            border-radius: 4px;
         }
 
         .video-id { color: #555; font-size: 0.7rem; font-family: monospace; }
-        #status-bar { background: #001a00; color: #99ff99; padding: 10px 25px; font-family: monospace; font-size: 13px; border-bottom: 1px solid #040; }
+        #status-bar { background: #001a00; color: #99ff99; padding: 10px 25px; font-family: monospace; font-size: 12px; border-bottom: 1px solid #040; }
 
         /* TV REMOTE FOCUS STATES */
-        /* Gold glow for the main video card */
         .main-card-link:focus {
             outline: 5px solid #FFD700 !important;
             outline-offset: -5px;
             background: rgba(255, 215, 0, 0.1);
         }
         
-        /* Scale the whole card when the video is focused */
         .video-card:focus-within {
-            transform: scale(1.03);
+            transform: scale(1.05);
             background: #252525;
+            z-index: 10;
         }
 
-        /* Blue glow for the channel link to show it's a different destination */
         .creator-link:focus {
-            outline: 4px solid #00BFFF !important;
+            outline: 3px solid #00BFFF !important;
             outline-offset: 2px;
-            background: #00BFFF22;
+            background: #00BFFF44;
             color: white;
         }
 
-        /* Standard buttons */
         .logo:focus, .nav-links a:focus {
             outline: 4px solid #FFD700;
             background: #333;
@@ -90,7 +102,7 @@
 </head>
 <body>
 
-    <div id="status-bar">> Connected to Supabase. Build: TV-OPTIMIZED-v1</div>
+    <div id="status-bar">> SupaVid TV Edition | Connected</div>
 
     <nav>
         <a href="homepage.html" class="logo">SupaVid</a>
@@ -135,14 +147,14 @@
                             <h3>${vid.title || 'Untitled'}</h3>
                             <div class="meta-row">
                                 <a href="profile.html?user=${username}" class="creator-link">@${username}</a>
-                                <span class="video-id">ID: ${vid.id.substring(0, 8)}</span>
+                                <span class="video-id">${vid.id.substring(0, 8)}</span>
                             </div>
                         </div>
                     </div>
                     `;
                 }).join('');
 
-                document.getElementById('status-bar').innerText = `> Connected. Found ${videos.length} videos.`;
+                document.getElementById('status-bar').innerText = `> Found ${videos.length} videos. Use Remote Arrows to navigate.`;
 
             } catch (err) {
                 console.error(err);

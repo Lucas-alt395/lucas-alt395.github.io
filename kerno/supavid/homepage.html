@@ -8,11 +8,11 @@
         body { font-family: sans-serif; background: #0f0f0f; color: white; margin: 0; }
         nav { display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; background: #202020; border-bottom: 1px solid #333; }
         .logo { font-size: 1.5rem; font-weight: bold; color: #ff0000; text-decoration: none; }
-        .nav-links a { color: white; text-decoration: none; margin-left: 15px; font-size: 0.9rem; }
-    
+        .nav-links a { color: white; text-decoration: none; margin-left: 15px; font-size: 0.9rem; padding: 8px; border-radius: 4px; }
+        
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 20px; }
-    
-        /* FIX: Force the link to be a block that fills the card */
+        
+        /* THE BLOCK FIX: Entire card is now a single focusable button */
         .video-card { 
             background: #1a1a1a; 
             border-radius: 12px; 
@@ -20,35 +20,32 @@
             text-decoration: none; 
             color: white; 
             border: 1px solid #333; 
-            transition: 0.2s; 
-            display: block; /* Important */
-        }
-
-        /* FIX: Ensure the focus box wraps around the image properly */
-        .video-card a {
+            transition: transform 0.2s, box-shadow 0.2s; 
             display: block; 
-            text-decoration: none;
-            color: inherit;
         }
 
         .video-card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; }
         .video-info { padding: 12px; }
         .video-info h3 { margin: 0; font-size: 1.1rem; line-height: 1.4; color: white; }
-        .creator-link { color: #aaa; font-size: 0.9rem; margin: 8px 0 4px 0; display: inline-block; text-decoration: none; }
-    
-        /* TV REMOTE OPTIMIZATION */
-        /* Focus-visible is better for TV as it only shows for remote/keyboard users */
-        :focus, :focus-within {
-            outline: 5px solid #FFD700 !important; 
-            outline-offset: 2px;
-            background-color: rgba(255, 215, 0, 0.2) !important;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+        .creator-link { color: #aaa; font-size: 0.9rem; margin: 8px 0 4px 0; display: inline-block; }
+        .video-id { color: #555; font-size: 0.7rem; font-family: monospace; }
+
+        #status-bar { background: #001a00; color: #99ff99; padding: 8px 20px; font-family: monospace; font-size: 12px; border-bottom: 1px solid #040; }
+
+        /* TV REMOTE FOCUS STATES */
+        /* This makes elements grow and glow when selected by the remote */
+        :focus {
+            outline: 4px solid #FFD700 !important; /* Golden Outline */
+            outline-offset: 4px;
+            background-color: rgba(255, 215, 0, 0.1) !important;
+            transform: scale(1.05); /* Slight zoom effect on TV */
+            z-index: 10;
         }
     </style>
 </head>
 <body>
 
-    <div id="status-bar">> Connected. Found 3 videos.</div>
+    <div id="status-bar">> Connected. SupaVid TV Build Active.</div>
 
     <nav>
         <a href="homepage.html" class="logo">SupaVid</a>
@@ -58,8 +55,7 @@
         </div>
     </nav>
 
-    <div id="video-grid" class="grid">
-        </div>
+    <div id="video-grid" class="grid"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -81,20 +77,16 @@
                 grid.innerHTML = videos.map(vid => {
                     const username = vid.profiles ? vid.profiles.username : 'unknown';
                     return `
-                    <div class="video-card">
-                        <a href="video.html?id=${vid.id}">
-                            <img src="${vid.thumbnail_url || 'https://via.placeholder.com/320x180'}" alt="Thumbnail">
-                        </a>
+                    <a href="video.html?id=${vid.id}" class="video-card">
+                        <img src="${vid.thumbnail_url || 'https://via.placeholder.com/320x180'}" alt="Thumbnail">
                         <div class="video-info">
-                            <a href="video.html?id=${vid.id}" style="text-decoration:none;">
-                                <h3>${vid.title || 'Untitled'}</h3>
-                            </a>
+                            <h3>${vid.title || 'Untitled'}</h3>
                             <div>
-                                <a href="profile.html?user=${username}" class="creator-link">@${username}</a>
+                                <span class="creator-link">@${username}</span>
                                 <span class="video-id">ID: ${vid.id.substring(0, 8)}</span>
                             </div>
                         </div>
-                    </div>
+                    </a>
                     `;
                 }).join('');
 

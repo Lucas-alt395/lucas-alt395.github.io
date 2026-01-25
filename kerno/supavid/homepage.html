@@ -5,47 +5,92 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SupaVid - Home</title>
     <style>
-        body { font-family: sans-serif; background: #0f0f0f; color: white; margin: 0; }
+        /* BASE THEME */
+        body { font-family: sans-serif; background: #0f0f0f; color: white; margin: 0; overflow-x: hidden; }
+        
+        /* NAVIGATION */
         nav { display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; background: #202020; border-bottom: 1px solid #333; }
-        .logo { font-size: 1.5rem; font-weight: bold; color: #ff0000; text-decoration: none; }
-        .nav-links a { color: white; text-decoration: none; margin-left: 15px; font-size: 0.9rem; padding: 8px; border-radius: 4px; }
-        
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 20px; }
-        
-        /* THE BLOCK FIX: Entire card is now a single focusable button */
+        .logo { font-size: 1.5rem; font-weight: bold; color: #ff0000; text-decoration: none; border-radius: 4px; padding: 4px 8px; }
+        .nav-links a { color: white; text-decoration: none; margin-left: 15px; font-size: 0.9rem; padding: 10px; border-radius: 8px; display: inline-block; }
+
+        /* VIDEO GRID */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; padding: 25px; }
+
+        /* THE CARD CONTAINER */
         .video-card { 
+            position: relative; /* Crucial for the ghost link */
             background: #1a1a1a; 
             border-radius: 12px; 
             overflow: hidden; 
-            text-decoration: none; 
-            color: white; 
-            border: 1px solid #333; 
-            transition: transform 0.2s, box-shadow 0.2s; 
-            display: block; 
+            border: 2px solid transparent; 
+            transition: transform 0.2s ease, background 0.2s ease;
+            display: flex;
+            flex-direction: column;
         }
 
-        .video-card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; }
-        .video-info { padding: 12px; }
+        .video-card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; border-bottom: 1px solid #333; }
+        .video-info { padding: 15px; position: relative; }
         .video-info h3 { margin: 0; font-size: 1.1rem; line-height: 1.4; color: white; }
-        .creator-link { color: #aaa; font-size: 0.9rem; margin: 8px 0 4px 0; display: inline-block; }
-        .video-id { color: #555; font-size: 0.7rem; font-family: monospace; }
+        
+        /* META ROW */
+        .meta-row { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+        
+        /* THE GHOST LINK (Main Video Action) */
+        .main-card-link {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 1; /* Sits above the image but below the channel link */
+            border-radius: 12px;
+        }
 
-        #status-bar { background: #001a00; color: #99ff99; padding: 8px 20px; font-family: monospace; font-size: 12px; border-bottom: 1px solid #040; }
+        /* THE CHANNEL LINK (Sits on Top) */
+        .creator-link { 
+            position: relative; 
+            z-index: 2; /* Sits ABOVE the ghost link */
+            color: #aaa; 
+            font-size: 0.9rem; 
+            text-decoration: none; 
+            padding: 6px 10px; 
+            background: rgba(255,255,255,0.05);
+            border-radius: 6px;
+            transition: color 0.2s;
+        }
+
+        .video-id { color: #555; font-size: 0.7rem; font-family: monospace; }
+        #status-bar { background: #001a00; color: #99ff99; padding: 10px 25px; font-family: monospace; font-size: 13px; border-bottom: 1px solid #040; }
 
         /* TV REMOTE FOCUS STATES */
-        /* This makes elements grow and glow when selected by the remote */
-        :focus {
-            outline: 4px solid #FFD700 !important; /* Golden Outline */
-            outline-offset: 4px;
-            background-color: rgba(255, 215, 0, 0.1) !important;
-            transform: scale(1.05); /* Slight zoom effect on TV */
-            z-index: 10;
+        /* Gold glow for the main video card */
+        .main-card-link:focus {
+            outline: 5px solid #FFD700 !important;
+            outline-offset: -5px;
+            background: rgba(255, 215, 0, 0.1);
+        }
+        
+        /* Scale the whole card when the video is focused */
+        .video-card:focus-within {
+            transform: scale(1.03);
+            background: #252525;
+        }
+
+        /* Blue glow for the channel link to show it's a different destination */
+        .creator-link:focus {
+            outline: 4px solid #00BFFF !important;
+            outline-offset: 2px;
+            background: #00BFFF22;
+            color: white;
+        }
+
+        /* Standard buttons */
+        .logo:focus, .nav-links a:focus {
+            outline: 4px solid #FFD700;
+            background: #333;
         }
     </style>
 </head>
 <body>
 
-    <div id="status-bar">> Connected. SupaVid TV Build Active.</div>
+    <div id="status-bar">> Connected to Supabase. Build: TV-OPTIMIZED-v1</div>
 
     <nav>
         <a href="homepage.html" class="logo">SupaVid</a>
@@ -55,7 +100,8 @@
         </div>
     </nav>
 
-    <div id="video-grid" class="grid"></div>
+    <div id="video-grid" class="grid">
+        </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -71,24 +117,32 @@
                     .select('*, profiles(username)')
                     .order('created_at', { ascending: false });
 
-                if (error) return console.error(error);
+                if (error) {
+                    document.getElementById('status-bar').innerText = "> Error: " + error.message;
+                    return;
+                }
 
                 const grid = document.getElementById('video-grid');
                 grid.innerHTML = videos.map(vid => {
                     const username = vid.profiles ? vid.profiles.username : 'unknown';
                     return `
-                    <a href="video.html?id=${vid.id}" class="video-card">
+                    <div class="video-card">
+                        <a href="video.html?id=${vid.id}" class="main-card-link" aria-label="Play ${vid.title}"></a>
+                        
                         <img src="${vid.thumbnail_url || 'https://via.placeholder.com/320x180'}" alt="Thumbnail">
+                        
                         <div class="video-info">
                             <h3>${vid.title || 'Untitled'}</h3>
-                            <div>
-                                <span class="creator-link">@${username}</span>
+                            <div class="meta-row">
+                                <a href="profile.html?user=${username}" class="creator-link">@${username}</a>
                                 <span class="video-id">ID: ${vid.id.substring(0, 8)}</span>
                             </div>
                         </div>
-                    </a>
+                    </div>
                     `;
                 }).join('');
+
+                document.getElementById('status-bar').innerText = `> Connected. Found ${videos.length} videos.`;
 
             } catch (err) {
                 console.error(err);

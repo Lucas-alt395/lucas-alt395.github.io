@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SupaVid - Profile</title>
+    <style>
+        /* Keeping your preferred style from the screenshots */
+        body { font-family: sans-serif; background: #0f0f0f; color: white; margin: 0; }
+        nav { display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; background: #202020; border-bottom: 1px solid #333; }
+        .logo { font-size: 1.5rem; font-weight: bold; color: #ff0000; text-decoration: none; }
+        .nav-links a { color: white; text-decoration: none; margin-left: 15px; font-size: 0.9rem; }
+        
+        /* Profile Header Section */
+        .profile-header { padding: 30px 20px; border-bottom: 1px solid #333; background: #151515; }
+        .profile-header h1 { margin: 0; font-size: 2rem; }
+        .profile-header p { color: #aaa; margin: 5px 0 0 0; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 20px; }
+        
+        .video-card { background: #1a1a1a; border-radius: 12px; overflow: hidden; text-decoration: none; color: white; border: 1px solid #333; transition: 0.2s; }
+        .video-card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; }
+        
+        .video-info { padding: 12px; }
+        .video-info h3 { margin: 0; font-size: 1.1rem; line-height: 1.4; }
+        .video-id { color: #555; font-size: 0.7rem; font-family: monospace; display: block; margin-top: 5px; }
+
+        #status-bar { background: #001a00; color: #99ff99; padding: 8px 20px; font-family: monospace; font-size: 12px; border-bottom: 1px solid #040; }
+    </style>
+</head>
+<body>
+
+    <div id="status-bar">> Loading profile...</div>
+
+    <nav>
+        <a href="homepage.html" class="logo">SupaVid</a>
+        <div class="nav-links">
+            <a href="homepage.html">Home</a>
+            <a href="upload.html">Upload</a>
+        </div>
+    </nav>
+
+    <div class="profile-header">
+        <h1 id="user-display">@loading...</h1>
+        <p id="video-count">0 videos</p>
+    </div>
+
+    <div id="video-grid" class="grid">
+        </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        const status = document.getElementById('status-bar');
+        
+        async function loadProfile() {
+            try {
+                // 1. Get username from URL (e.g., profile.html?user=nathan)
+                const params = new URLSearchParams(window.location.search);
+                const username = params.get('user');
+
+                if (!username) {
+                    status.innerHTML = "> Error: No user specified";
+                    return;
+                }
+
+                const supabaseUrl = 'https://xnvhixwirbpofdkyhtvf.supabase.co';
+                const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhudmhpeHdpcmJwb2Zka3lodHZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMzE0NzgsImV4cCI6MjA4MzgwNzQ3OH0.gg6cLfx1PrGTNKztWSqDy3U9W66mNCu6ln5WDDLpyVo';
+                const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+                // 2. Find the user ID based on the username
+                const { data: profile, error: pError } = await supabase
+                    .from('profiles')
+                    .select('id, username')
+                    .eq('username', username)
+                    .single();
+
+                if (pError || !profile) {
+                    status.innerHTML = "> Error: Profile not found";
+                    return;
+                }
+
+                document.getElementById('user-display').innerText = "@" + profile.username;
+
+                // 3. Fetch all videos belonging to this ID
+                const { data: videos, error: vError } = await supabase
+                    .from('videos')
+                    .select('*')
+                    .eq('owner_id', profile.id)
+                    .order('created_at', { ascending: false });
+
+                if (vError) {
+                    status.innerHTML = "> Error loading videos: " + vError.message;
+                    return;
+                }
+
+                status.innerHTML = "> Viewing " + profile.username + "'s channel";
+                document.getElementById('video-count').innerText = videos.length + " videos";
+
+                const grid = document.getElementById('video-grid');
+                if (videos.length === 0) {
+                    grid.innerHTML = "<p>This user hasn't uploaded anything yet.</p>";
+                } else {
+                    grid.innerHTML = videos.map(vid => `
+                        <a href="video.html?id=${vid.id}" class="video-card">
+                            <img src="${vid.thumbnail_url || 'https://via.placeholder.com/320x180?text=SupaVid'}">
+                            <div class="video-info">
+                                <h3>${vid.title || 'Untitled'}</h3>
+                                <span class="video-id">ID: ${vid.id.substring(0, 8)}</span>
+                            </div>
+                        </a>
+                    `).join('');
+                }
+
+            } catch (err) {
+                status.innerHTML = "> CRASH: " + err.message;
+            }
+        }
+
+        loadProfile();
+    </script>
+</body>
+</html>

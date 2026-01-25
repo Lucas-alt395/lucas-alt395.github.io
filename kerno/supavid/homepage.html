@@ -9,28 +9,40 @@
         nav { display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; background: #202020; border-bottom: 1px solid #333; }
         .logo { font-size: 1.5rem; font-weight: bold; color: #ff0000; text-decoration: none; }
         .nav-links a { color: white; text-decoration: none; margin-left: 15px; font-size: 0.9rem; }
-        
+    
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 20px; }
-        
-        .video-card { background: #1a1a1a; border-radius: 12px; overflow: hidden; text-decoration: none; color: white; border: 1px solid #333; transition: 0.2s; display: block; }
+    
+        /* FIX: Force the link to be a block that fills the card */
+        .video-card { 
+            background: #1a1a1a; 
+            border-radius: 12px; 
+            overflow: hidden; 
+            text-decoration: none; 
+            color: white; 
+            border: 1px solid #333; 
+            transition: 0.2s; 
+            display: block; /* Important */
+        }
+
+        /* FIX: Ensure the focus box wraps around the image properly */
+        .video-card a {
+            display: block; 
+            text-decoration: none;
+            color: inherit;
+        }
+
         .video-card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; }
-        
         .video-info { padding: 12px; }
         .video-info h3 { margin: 0; font-size: 1.1rem; line-height: 1.4; color: white; }
-        
         .creator-link { color: #aaa; font-size: 0.9rem; margin: 8px 0 4px 0; display: inline-block; text-decoration: none; }
-        .creator-link:hover { color: #fff; text-decoration: underline; }
-        
-        .video-id { color: #555; font-size: 0.7rem; font-family: monospace; }
-
-        #status-bar { background: #001a00; color: #99ff99; padding: 8px 20px; font-family: monospace; font-size: 12px; border-bottom: 1px solid #040; }
-
+    
         /* TV REMOTE OPTIMIZATION */
-        /* This makes buttons glow when the TV remote highlights them */
-        :focus {
-            outline: 5px solid #FFD700 !important; /* Bright Gold */
+        /* Focus-visible is better for TV as it only shows for remote/keyboard users */
+        :focus, :focus-within {
+            outline: 5px solid #FFD700 !important; 
+            outline-offset: 2px;
             background-color: rgba(255, 215, 0, 0.2) !important;
-            transition: all 0.2s ease-in-out;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
         }
     </style>
 </head>

@@ -13,24 +13,22 @@
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 20px; }
         
         .video-card { background: #1a1a1a; border-radius: 12px; overflow: hidden; text-decoration: none; color: white; border: 1px solid #333; transition: 0.2s; display: block; }
-        .video-card:hover { transform: scale(1.02); border-color: #555; }
         .video-card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; }
         
         .video-info { padding: 12px; }
         .video-info h3 { margin: 0; font-size: 1.1rem; line-height: 1.4; color: white; }
         
-        /* Style for the Creator Link */
         .creator-link { color: #aaa; font-size: 0.9rem; margin: 8px 0 4px 0; display: inline-block; text-decoration: none; }
         .creator-link:hover { color: #fff; text-decoration: underline; }
         
-        .video-id { color: #555; font-size: 0.7rem; font-family: monospace; display: block; }
+        .video-id { color: #555; font-size: 0.7rem; font-family: monospace; }
 
-        #status-bar { background: #1a0000; color: #ff9999; padding: 8px 20px; font-family: monospace; font-size: 12px; border-bottom: 1px solid #400; }
+        #status-bar { background: #001a00; color: #99ff99; padding: 8px 20px; font-family: monospace; font-size: 12px; border-bottom: 1px solid #040; }
     </style>
 </head>
 <body>
 
-    <div id="status-bar">> Connecting to SupaVid...</div>
+    <div id="status-bar">> Connected. Found 3 videos.</div>
 
     <nav>
         <a href="homepage.html" class="logo">SupaVid</a>
@@ -41,80 +39,49 @@
     </nav>
 
     <div id="video-grid" class="grid">
-        <p style="padding: 20px;">Loading feed...</p>
-    </div>
+        </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
-        const status = document.getElementById('status-bar');
-        
-        function updateStatus(msg, success = false) {
-            status.innerHTML = "> " + msg;
-            if (success) {
-                status.style.background = "#001a00";
-                status.style.color = "#99ff99";
-                status.style.borderBottom = "1px solid #040";
-            }
-        }
-
         async function loadFeed() {
             try {
                 const supabaseUrl = 'https://xnvhixwirbpofdkyhtvf.supabase.co';
                 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhudmhpeHdpcmJwb2Zka3lodHZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMzE0NzgsImV4cCI6MjA4MzgwNzQ3OH0.gg6cLfx1PrGTNKztWSqDy3U9W66mNCu6ln5WDDLpyVo';
-                
                 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-                // Fetching videos AND the username from the profiles table
                 const { data: videos, error } = await supabase
                     .from('videos')
-                    .select(`
-                        *,
-                        profiles (
-                            username
-                        )
-                    `)
+                    .select('*, profiles(username)')
                     .order('created_at', { ascending: false });
 
-                if (error) {
-                    updateStatus("DB ERROR: " + error.message);
-                    return;
-                }
-
-                updateStatus("Connected. Found " + videos.length + " videos.", true);
+                if (error) return console.error(error);
 
                 const grid = document.getElementById('video-grid');
-                
-                if (videos.length === 0) {
-                    grid.innerHTML = "<p style='grid-column: 1/-1; text-align: center; padding: 50px;'>No videos found.</p>";
-                } else {
-                    grid.innerHTML = videos.map(vid => {
-                        const creator = vid.profiles ? vid.profiles.username : 'unknown_user';
-                        
-                        return `
-                        <div class="video-card">
-                            <a href="video.html?id=${vid.id}">
-                                <img src="${vid.thumbnail_url || 'https://via.placeholder.com/320x180?text=SupaVid'}" alt="Thumbnail">
+                grid.innerHTML = videos.map(vid => {
+                    const username = vid.profiles ? vid.profiles.username : 'unknown';
+                    return `
+                    <div class="video-card">
+                        <a href="video.html?id=${vid.id}">
+                            <img src="${vid.thumbnail_url || 'https://via.placeholder.com/320x180'}" alt="Thumbnail">
+                        </a>
+                        <div class="video-info">
+                            <a href="video.html?id=${vid.id}" style="text-decoration:none;">
+                                <h3>${vid.title || 'Untitled'}</h3>
                             </a>
-                            <div class="video-info">
-                                <a href="video.html?id=${vid.id}" style="text-decoration:none;">
-                                    <h3>${vid.title || 'Untitled Video'}</h3>
-                                </a>
-                                <a href="profile.html?user=${creator}" class="creator-link">
-                                    @${creator}
-                                </a>
+                            <div>
+                                <a href="profile.html?user=${username}" class="creator-link">@${username}</a>
                                 <span class="video-id">ID: ${vid.id.substring(0, 8)}</span>
                             </div>
                         </div>
-                        `;
-                    }).join('');
-                }
+                    </div>
+                    `;
+                }).join('');
 
             } catch (err) {
-                updateStatus("CRASH: " + err.message);
+                console.error(err);
             }
         }
-
         loadFeed();
     </script>
 </body>

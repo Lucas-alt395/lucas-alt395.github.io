@@ -86,7 +86,10 @@
                             <img src="${vid.thumbnail_url || 'https://via.placeholder.com/320x180?text=No+Thumbnail'}" alt="Thumbnail">
                             <div class="video-info">
                                 <h3>${vid.title || 'Untitled Video'}</h3>
-                                <span class="creator-name">
+                                <a href="profile.html?user=${vid.profiles.username}" class="creator-name">
+    @${vid.profiles ? vid.profiles.username : 'unknown_user'}
+</a>
+
                                     @${vid.profiles ? vid.profiles.username : 'unknown_user'}
                                 </span>
                                 <span class="video-id">ID: ${vid.id.substring(0, 8)}</span>

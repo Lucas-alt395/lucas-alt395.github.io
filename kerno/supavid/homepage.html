@@ -11,20 +11,18 @@
         .nav-links { display: flex; align-items: center; gap: 15px; }
         .nav-links a { color: white; text-decoration: none; font-size: 0.9rem; }
         .user-pill { display: flex; align-items: center; gap: 10px; text-decoration: none; color: white; background: #333; padding: 5px 12px; border-radius: 20px; border: 1px solid #444; }
-        .user-pill img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; background: #555; }
-        .logout-btn { font-size: 11px; color: #888; cursor: pointer; border: none; background: none; text-decoration: underline; }
+        .user-pill img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 20px; }
         .video-card { background: #1a1a1a; border-radius: 12px; overflow: hidden; border: 1px solid #333; }
         .video-card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; }
         .video-info { padding: 12px; }
-        .video-info h3 { margin: 0; font-size: 1.1rem; color: white; }
-        .creator-link { color: #aaa; font-size: 0.9rem; margin: 8px 0; display: inline-block; text-decoration: none; }
-        #status-bar { background: #1a0000; color: #ff9999; padding: 8px 20px; font-family: monospace; font-size: 12px; border-bottom: 1px solid #400; }
+        .creator-link { color: #aaa; font-size: 0.85rem; text-decoration: none; display: block; margin-top: 5px; }
+        #status-bar { background: #220000; color: #ff9999; padding: 8px 20px; font-family: monospace; font-size: 12px; border-bottom: 1px solid #400; }
     </style>
 </head>
 <body>
 
-    <div id="status-bar">> System Initializing...</div>
+    <div id="status-bar">> Initializing Database...</div>
 
     <nav>
         <a href="homepage.html" class="logo">SupaVid</a>
@@ -35,7 +33,7 @@
     </nav>
 
     <div id="video-grid" class="grid">
-        <p style="padding: 20px;">Loading feed...</p>
+        <p style="padding: 20px;">Loading data...</p>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -45,81 +43,66 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhudmhpeHdpcmJwb2Zka3lodHZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMzE0NzgsImV4cCI6MjA4MzgwNzQ3OH0.gg6cLfx1PrGTNKztWSqDy3U9W66mNCu6ln5WDDLpyVo';
         const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        const status = document.getElementById('status-bar');
-        const authSection = document.getElementById('auth-section');
-
-        async function init() {
+        async function start() {
+            const status = document.getElementById('status-bar');
+            
             try {
-                // Run user check and feed load at the same time so one doesn't block the other
-                await Promise.all([checkUser(), loadFeed()]);
-            } catch (err) {
-                status.innerHTML = "> CRITICAL CRASH: " + err.message;
-            }
-        }
-
-        async function checkUser() {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('username, avatar_url')
-                    .eq('id', session.user.id)
-                    .single();
-
-                if (profile) {
-                    authSection.innerHTML = `
-                        <a href="upload.html">Upload</a>
-                        <a href="profile.html?user=${profile.username}" class="user-pill">
-                            <img src="${profile.avatar_url || 'https://via.placeholder.com/24'}">
-                            <span>${profile.username}</span>
-                        </a>
-                        <button onclick="handleLogout()" class="logout-btn">Logout</button>
-                    `;
+                // 1. Check Login Status first
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session) {
+                    const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+                    if (profile) {
+                        document.getElementById('auth-section').innerHTML = `
+                            <a href="upload.html">Upload</a>
+                            <a href="profile.html?user=${profile.username}" class="user-pill">
+                                <img src="${profile.avatar_url || 'https://via.placeholder.com/24'}">
+                                <span>${profile.username}</span>
+                            </a>
+                            <button onclick="supabase.auth.signOut().then(()=>location.reload())" style="background:none; border:none; color:#888; text-decoration:underline; cursor:pointer; font-size:11px;">Logout</button>
+                        `;
+                    }
                 }
-            }
-        }
 
-        async function handleLogout() {
-            await supabase.auth.signOut();
-            window.location.reload();
-        }
+                // 2. Fetch Videos with Profile Data
+                // If this returns 0 videos but you HAVE videos, it's an RLS Policy issue.
+                const { data: videos, error } = await supabase
+                    .from('videos')
+                    .select('*, profiles(username, avatar_url)')
+                    .order('created_at', { ascending: false });
 
-        async function loadFeed() {
-            const { data: videos, error } = await supabase
-                .from('videos')
-                .select('*, profiles(username)')
-                .order('created_at', { ascending: false });
+                if (error) throw error;
 
-            if (error) {
-                status.innerHTML = "> DB ERROR: " + error.message;
-                status.style.background = "#330000";
-                return;
-            }
+                status.innerHTML = `> Connected. Found ${videos.length} videos.`;
+                status.style.background = "#002200";
+                status.style.color = "#99ff99";
 
-            status.innerHTML = "> Connected. Found " + videos.length + " videos.";
-            status.style.background = "#001a00";
-            status.style.color = "#99ff99";
+                const grid = document.getElementById('video-grid');
+                if (videos.length === 0) {
+                    grid.innerHTML = "<p>No videos found in database.</p>";
+                    return;
+                }
 
-            const grid = document.getElementById('video-grid');
-            grid.innerHTML = videos.map(vid => {
-                const creator = vid.profiles ? vid.profiles.username : 'unknown';
-                return `
-                <div class="video-card">
-                    <a href="video.html?id=${vid.id}">
-                        <img src="${vid.thumbnail_url || 'https://via.placeholder.com/320x180'}">
-                    </a>
-                    <div class="video-info">
-                        <a href="video.html?id=${vid.id}" style="text-decoration:none;">
-                            <h3>${vid.title || 'Untitled'}</h3>
+                grid.innerHTML = videos.map(v => {
+                    const username = v.profiles ? v.profiles.username : "unknown_user";
+                    return `
+                    <div class="video-card">
+                        <a href="video.html?id=${v.id}">
+                            <img src="${v.thumbnail_url || 'https://via.placeholder.com/320x180'}">
                         </a>
-                        <a href="profile.html?user=${creator}" class="creator-link">@${creator}</a>
-                    </div>
-                </div>
-                `;
-            }).join('');
+                        <div class="video-info">
+                            <h3 style="margin:0; font-size:1.1rem;">${v.title || 'Untitled'}</h3>
+                            <a href="profile.html?user=${username}" class="creator-link">@${username}</a>
+                        </div>
+                    </div>`;
+                }).join('');
+
+            } catch (err) {
+                status.innerHTML = "> FATAL ERROR: " + err.message;
+                console.error(err);
+            }
         }
 
-        init();
+        start();
     </script>
 </body>
 </html>

@@ -8,28 +8,23 @@
         body { font-family: sans-serif; background: #0f0f0f; color: white; margin: 0; }
         nav { display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; background: #202020; border-bottom: 1px solid #333; }
         .logo { font-size: 1.5rem; font-weight: bold; color: #ff0000; text-decoration: none; }
-        
         .nav-links { display: flex; align-items: center; gap: 15px; }
         .nav-links a { color: white; text-decoration: none; font-size: 0.9rem; }
-        
-        /* User Profile in Nav */
         .user-pill { display: flex; align-items: center; gap: 10px; text-decoration: none; color: white; background: #333; padding: 5px 12px; border-radius: 20px; border: 1px solid #444; }
         .user-pill img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; background: #555; }
-        .logout-btn { font-size: 11px; color: #888; cursor: pointer; border: none; background: none; padding: 0; text-decoration: underline; }
-
+        .logout-btn { font-size: 11px; color: #888; cursor: pointer; border: none; background: none; text-decoration: underline; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 20px; }
         .video-card { background: #1a1a1a; border-radius: 12px; overflow: hidden; border: 1px solid #333; }
         .video-card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; }
         .video-info { padding: 12px; }
         .video-info h3 { margin: 0; font-size: 1.1rem; color: white; }
         .creator-link { color: #aaa; font-size: 0.9rem; margin: 8px 0; display: inline-block; text-decoration: none; }
-        
-        #status-bar { background: #001a00; color: #99ff99; padding: 8px 20px; font-family: monospace; font-size: 12px; border-bottom: 1px solid #040; }
+        #status-bar { background: #1a0000; color: #ff9999; padding: 8px 20px; font-family: monospace; font-size: 12px; border-bottom: 1px solid #400; }
     </style>
 </head>
 <body>
 
-    <div id="status-bar">> Initializing...</div>
+    <div id="status-bar">> System Initializing...</div>
 
     <nav>
         <a href="homepage.html" class="logo">SupaVid</a>
@@ -53,35 +48,34 @@
         const status = document.getElementById('status-bar');
         const authSection = document.getElementById('auth-section');
 
-        async function initPage() {
-            await checkUser();
-            await loadFeed();
+        async function init() {
+            try {
+                // Run user check and feed load at the same time so one doesn't block the other
+                await Promise.all([checkUser(), loadFeed()]);
+            } catch (err) {
+                status.innerHTML = "> CRITICAL CRASH: " + err.message;
+            }
         }
 
         async function checkUser() {
-            try {
-                const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('username, avatar_url')
+                    .eq('id', session.user.id)
+                    .single();
 
-                if (session) {
-                    const { data: profile } = await supabase
-                        .from('profiles')
-                        .select('username, avatar_url')
-                        .eq('id', session.user.id)
-                        .single();
-
-                    if (profile) {
-                        authSection.innerHTML = `
-                            <a href="upload.html">Upload</a>
-                            <a href="profile.html?user=${profile.username}" class="user-pill">
-                                <img src="${profile.avatar_url || 'https://via.placeholder.com/24'}">
-                                <span>${profile.username}</span>
-                            </a>
-                            <button onclick="handleLogout()" class="logout-btn">Logout</button>
-                        `;
-                    }
+                if (profile) {
+                    authSection.innerHTML = `
+                        <a href="upload.html">Upload</a>
+                        <a href="profile.html?user=${profile.username}" class="user-pill">
+                            <img src="${profile.avatar_url || 'https://via.placeholder.com/24'}">
+                            <span>${profile.username}</span>
+                        </a>
+                        <button onclick="handleLogout()" class="logout-btn">Logout</button>
+                    `;
                 }
-            } catch (err) {
-                console.error("Auth check failed", err);
             }
         }
 
@@ -91,43 +85,41 @@
         }
 
         async function loadFeed() {
-            try {
-                const { data: videos, error } = await supabase
-                    .from('videos')
-                    .select('*, profiles(username)')
-                    .order('created_at', { ascending: false });
+            const { data: videos, error } = await supabase
+                .from('videos')
+                .select('*, profiles(username)')
+                .order('created_at', { ascending: false });
 
-                if (error) {
-                    status.innerHTML = "> DB ERROR: " + error.message;
-                    return;
-                }
-
-                status.innerHTML = "> Connected. Showing " + videos.length + " videos.";
-
-                const grid = document.getElementById('video-grid');
-                grid.innerHTML = videos.map(vid => {
-                    const creator = vid.profiles ? vid.profiles.username : 'unknown';
-                    return `
-                    <div class="video-card">
-                        <a href="video.html?id=${vid.id}">
-                            <img src="${vid.thumbnail_url || 'https://via.placeholder.com/320x180'}">
-                        </a>
-                        <div class="video-info">
-                            <a href="video.html?id=${vid.id}" style="text-decoration:none;">
-                                <h3>${vid.title || 'Untitled'}</h3>
-                            </a>
-                            <a href="profile.html?user=${creator}" class="creator-link">@${creator}</a>
-                        </div>
-                    </div>
-                    `;
-                }).join('');
-
-            } catch (err) {
-                status.innerHTML = "> CRASH: " + err.message;
+            if (error) {
+                status.innerHTML = "> DB ERROR: " + error.message;
+                status.style.background = "#330000";
+                return;
             }
+
+            status.innerHTML = "> Connected. Found " + videos.length + " videos.";
+            status.style.background = "#001a00";
+            status.style.color = "#99ff99";
+
+            const grid = document.getElementById('video-grid');
+            grid.innerHTML = videos.map(vid => {
+                const creator = vid.profiles ? vid.profiles.username : 'unknown';
+                return `
+                <div class="video-card">
+                    <a href="video.html?id=${vid.id}">
+                        <img src="${vid.thumbnail_url || 'https://via.placeholder.com/320x180'}">
+                    </a>
+                    <div class="video-info">
+                        <a href="video.html?id=${vid.id}" style="text-decoration:none;">
+                            <h3>${vid.title || 'Untitled'}</h3>
+                        </a>
+                        <a href="profile.html?user=${creator}" class="creator-link">@${creator}</a>
+                    </div>
+                </div>
+                `;
+            }).join('');
         }
 
-        initPage();
+        init();
     </script>
 </body>
 </html>

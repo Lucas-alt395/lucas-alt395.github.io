@@ -24,6 +24,14 @@
         .video-id { color: #555; font-size: 0.7rem; font-family: monospace; }
 
         #status-bar { background: #001a00; color: #99ff99; padding: 8px 20px; font-family: monospace; font-size: 12px; border-bottom: 1px solid #040; }
+
+        /* TV REMOTE OPTIMIZATION */
+        /* This makes buttons glow when the TV remote highlights them */
+        :focus {
+            outline: 5px solid #FFD700 !important; /* Bright Gold */
+            background-color: rgba(255, 215, 0, 0.2) !important;
+            transition: all 0.2s ease-in-out;
+        }
     </style>
 </head>
 <body>

@@ -8,101 +8,75 @@
         body { font-family: sans-serif; background: #0f0f0f; color: white; margin: 0; }
         nav { display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; background: #202020; border-bottom: 1px solid #333; }
         .logo { font-size: 1.5rem; font-weight: bold; color: #ff0000; text-decoration: none; }
-        .nav-links { display: flex; align-items: center; gap: 15px; }
-        .nav-links a { color: white; text-decoration: none; font-size: 0.9rem; }
-        .user-pill { display: flex; align-items: center; gap: 10px; text-decoration: none; color: white; background: #333; padding: 5px 12px; border-radius: 20px; border: 1px solid #444; }
-        .user-pill img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+        .nav-links a { color: white; text-decoration: none; margin-left: 15px; font-size: 0.9rem; }
+        
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 20px; }
-        .video-card { background: #1a1a1a; border-radius: 12px; overflow: hidden; border: 1px solid #333; }
+        
+        .video-card { background: #1a1a1a; border-radius: 12px; overflow: hidden; border: 1px solid #333; text-decoration: none; color: white; display: block; }
         .video-card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; }
+        
         .video-info { padding: 12px; }
-        .creator-link { color: #aaa; font-size: 0.85rem; text-decoration: none; display: block; margin-top: 5px; }
-        #status-bar { background: #220000; color: #ff9999; padding: 8px 20px; font-family: monospace; font-size: 12px; border-bottom: 1px solid #400; }
+        .video-info h3 { margin: 0; font-size: 1.1rem; line-height: 1.4; }
+        .video-id { color: #555; font-size: 0.75rem; font-family: monospace; display: block; margin-top: 8px; }
+
+        #status-bar { background: #001a00; color: #99ff99; padding: 8px 20px; font-family: monospace; font-size: 12px; border-bottom: 1px solid #040; }
     </style>
 </head>
 <body>
 
-    <div id="status-bar">> Initializing Database...</div>
+    <div id="status-bar">> Connecting to Supabase...</div>
 
     <nav>
         <a href="homepage.html" class="logo">SupaVid</a>
-        <div class="nav-links" id="auth-section">
+        <div class="nav-links">
             <a href="upload.html">Upload</a>
             <a href="login.html">Login</a>
         </div>
     </nav>
 
     <div id="video-grid" class="grid">
-        <p style="padding: 20px;">Loading data...</p>
-    </div>
+        </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
-        const supabaseUrl = 'https://xnvhixwirbpofdkyhtvf.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhudmhpeHdpcmJwb2Zka3lodHZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMzE0NzgsImV4cCI6MjA4MzgwNzQ3OH0.gg6cLfx1PrGTNKztWSqDy3U9W66mNCu6ln5WDDLpyVo';
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-
-        async function start() {
+        async function loadFeed() {
             const status = document.getElementById('status-bar');
-            
             try {
-                // 1. Check Login Status first
-                const { data: { session } } = await supabase.auth.getSession();
-                if (session) {
-                    const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-                    if (profile) {
-                        document.getElementById('auth-section').innerHTML = `
-                            <a href="upload.html">Upload</a>
-                            <a href="profile.html?user=${profile.username}" class="user-pill">
-                                <img src="${profile.avatar_url || 'https://via.placeholder.com/24'}">
-                                <span>${profile.username}</span>
-                            </a>
-                            <button onclick="supabase.auth.signOut().then(()=>location.reload())" style="background:none; border:none; color:#888; text-decoration:underline; cursor:pointer; font-size:11px;">Logout</button>
-                        `;
-                    }
-                }
+                const supabaseUrl = 'https://xnvhixwirbpofdkyhtvf.supabase.co';
+                const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhudmhpeHdpcmJwb2Zka3lodHZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMzE0NzgsImV4cCI6MjA4MzgwNzQ3OH0.gg6cLfx1PrGTNKztWSqDy3U9W66mNCu6ln5WDDLpyVo';
+                const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-                // 2. Fetch Videos with Profile Data
-                // If this returns 0 videos but you HAVE videos, it's an RLS Policy issue.
+                // Simple select from videos ONLY
                 const { data: videos, error } = await supabase
                     .from('videos')
-                    .select('*, profiles(username, avatar_url)')
+                    .select('*')
                     .order('created_at', { ascending: false });
 
-                if (error) throw error;
-
-                status.innerHTML = `> Connected. Found ${videos.length} videos.`;
-                status.style.background = "#002200";
-                status.style.color = "#99ff99";
-
-                const grid = document.getElementById('video-grid');
-                if (videos.length === 0) {
-                    grid.innerHTML = "<p>No videos found in database.</p>";
+                if (error) {
+                    status.innerHTML = "> Error: " + error.message;
                     return;
                 }
 
-                grid.innerHTML = videos.map(v => {
-                    const username = v.profiles ? v.profiles.username : "unknown_user";
-                    return `
-                    <div class="video-card">
-                        <a href="video.html?id=${v.id}">
-                            <img src="${v.thumbnail_url || 'https://via.placeholder.com/320x180'}">
-                        </a>
+                status.innerHTML = "> Connected. Found " + videos.length + " videos.";
+
+                const grid = document.getElementById('video-grid');
+                grid.innerHTML = videos.map(vid => `
+                    <a href="video.html?id=${vid.id}" class="video-card">
+                        <img src="${vid.thumbnail_url || 'https://via.placeholder.com/320x180'}" alt="Thumbnail">
                         <div class="video-info">
-                            <h3 style="margin:0; font-size:1.1rem;">${v.title || 'Untitled'}</h3>
-                            <a href="profile.html?user=${username}" class="creator-link">@${username}</a>
+                            <h3>${vid.title || 'Untitled'}</h3>
+                            <span class="video-id">ID: ${vid.id.substring(0, 8)}</span>
                         </div>
-                    </div>`;
-                }).join('');
+                    </a>
+                `).join('');
 
             } catch (err) {
-                status.innerHTML = "> FATAL ERROR: " + err.message;
-                console.error(err);
+                status.innerHTML = "> Critical Crash: " + err.message;
             }
         }
 
-        start();
+        loadFeed();
     </script>
 </body>
 </html>

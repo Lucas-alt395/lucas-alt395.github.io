@@ -8,19 +8,42 @@
         body { font-family: sans-serif; background: #0f0f0f; color: white; margin: 0; }
         nav { padding: 1rem; background: #202020; }
         .container { max-width: 900px; margin: 0 auto; padding: 15px; }
-        video { width: 100%; border-radius: 8px; background: black; aspect-ratio: 16/9; }
+        
+        /* Added a gold outline for when the player is selected */
+        video { 
+            width: 100%; 
+            border-radius: 8px; 
+            background: black; 
+            aspect-ratio: 16/9; 
+            outline: none;
+            transition: 0.2s;
+        }
+        
+        video:focus {
+            outline: 5px solid #FFD700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
         #debug-watch { background: #330000; color: #ff9999; padding: 10px; font-size: 12px; }
         h1 { font-size: 1.5rem; margin-top: 15px; }
+        
+        .back-btn { 
+            color:white; 
+            text-decoration:none; 
+            padding: 8px 15px; 
+            border-radius: 5px;
+        }
+        .back-btn:focus { background: #444; outline: 2px solid white; }
     </style>
 </head>
 <body>
 
     <div id="debug-watch">Initializing player...</div>
 
-    <nav><a href="homepage.html" style="color:white; text-decoration:none;">← Back to Home</a></nav>
+    <nav><a href="homepage.html" class="back-btn">← Back to Home</a></nav>
 
     <div class="container">
-        <video id="player" controls autoplay></video>
+        <video id="player" controls autoplay muted tabindex="0"></video>
         <h1 id="v-title">Loading title...</h1>
         <p id="v-desc" style="color:#aaa;"></p>
     </div>
@@ -29,24 +52,22 @@
 
     <script>
         const log = document.getElementById('debug-watch');
-        
+        const player = document.getElementById('player');
+
         async function loadVideo() {
             try {
-                // 1. Get ID from URL
                 const params = new URLSearchParams(window.location.search);
                 const videoId = params.get('id');
-                
+
                 if (!videoId) {
                     log.innerHTML = "Error: No video ID in URL";
                     return;
                 }
 
-                // 2. Initialize Supabase
                 const supabaseUrl = 'https://xnvhixwirbpofdkyhtvf.supabase.co';
                 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhudmhpeHdpcmJwb2Zka3lodHZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMzE0NzgsImV4cCI6MjA4MzgwNzQ3OH0.gg6cLfx1PrGTNKztWSqDy3U9W66mNCu6ln5WDDLpyVo';
                 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-                // 3. Fetch specific video
                 const { data: video, error } = await supabase
                     .from('videos')
                     .select('*')
@@ -58,18 +79,34 @@
                     return;
                 }
 
-                // 4. Update Player
                 log.innerHTML = "Video Loaded!";
                 log.style.background = "darkgreen";
-                
-                document.getElementById('player').src = video.video_url;
+
+                player.src = video.video_url;
                 document.getElementById('v-title').innerText = video.title || "Untitled";
                 document.getElementById('v-desc').innerText = video.description || "No description provided.";
+
+                // TV AUTO-FOCUS: Land on the player immediately so the user can hit "Play"
+                player.focus();
 
             } catch (err) {
                 log.innerHTML = "Crash: " + err.message;
             }
         }
+
+        // Handle Remote "Enter" button for Play/Pause
+        window.addEventListener('keydown', function(e) {
+            if (e.keyCode === 13 || e.key === "Enter") {
+                // If focusing the player, toggle play/pause
+                if (document.activeElement === player) {
+                    if (player.paused) {
+                        player.play();
+                    } else {
+                        player.pause();
+                    }
+                }
+            }
+        });
 
         loadVideo();
     </script>

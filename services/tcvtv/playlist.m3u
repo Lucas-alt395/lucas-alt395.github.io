@@ -1,4 +1,4 @@
 #EXTM3U
 #EXTINF:-1 tvg-id="talentencampus.tv" tvg-logo="https://raw.githubusercontent.com/Lucas-alt395/lucas-alt395.github.io/master/services/tcvtv/logo.png" catchup="append" catchup-days="7" catchup-source="?utc={utc}&lutc={lutc}" group-title="School", Talentencampus TV
-https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4
+https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8
 

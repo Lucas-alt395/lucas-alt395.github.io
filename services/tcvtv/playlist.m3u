@@ -1,3 +1,3 @@
 #EXTM3U
-#EXTINF:-1 tvg-id="talentencampus.tv" tvg-logo="https://raw.githubusercontent.com/Lucas-alt395/lucas-alt395.github.io/services/tcvtv/logo.png" catchup="append" catchup-days="7" catchup-source="?utc={utc}&lutc={lutc}" group-title="School", Talentencampus TV
-https://raw.githubusercontent.com/Lucas-alt395/lucas-alt395.github.io/services/tcvtv/test.mp4
+#EXTINF:-1 tvg-id="talentencampus.tv" tvg-logo="https://raw.githubusercontent.com/Lucas-alt395/lucas-alt395.github.io/master/services/tcvtv/logo.png" catchup="append" catchup-days="7" catchup-source="?utc={utc}&lutc={lutc}" group-title="School", Talentencampus TV
+https://raw.githubusercontent.com/Lucas-alt395/lucas-alt395.github.io/master/services/tcvtv/test.mp4

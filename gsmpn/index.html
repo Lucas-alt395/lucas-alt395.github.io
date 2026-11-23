@@ -199,7 +199,7 @@
         async function initCategories() {
             try {
                 // In production, try loading real categories.json if present
-                const res = await fetch('./categories.json');
+                const res = await fetch('./gsmpn/categories.json');
                 if (res.ok) {
                     loadedCategories = await res.json();
                 } else {
